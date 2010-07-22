@@ -1,0 +1,5 @@
+Hello World!
+This is an inserted line;
+	This is a line with a	TAB	inserted;
+This is yet another.
+Goodbye Cruel World!

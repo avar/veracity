@@ -1,0 +1,35 @@
+{
+	"comment" : "A main test script that does what...",
+	"commands" :
+	[
+		{
+			"cmd" : "create_new_repo",
+			"repo" : "r1",
+			"pathname" : "./repo",
+			"comment" : "Creates a new repo in the given directory and initializes it.  We don't care about the RepoID.  We can refer to this repo by the symbolic name 'r1'."
+		},
+		{
+			"cmd" : "set_current_repo",
+			"repo" : "r1",
+			"comment" : "Select the named repo for subsequent commits that don't explicitly give a repo name."
+		},
+		{
+			"cmd" : "initial_commit",
+			"repo" : "r1",
+			"name" : "c1",
+			"comment" : "Create an initial commit (one with no parents) in the current or named repo."
+		},
+		{
+			"cmd" : "assert_leaves",
+			"repo" : "r1",
+			"leaves" : [ "c1" ],
+			"comment" : "Verify the set of leaves in the dag."
+		},
+		{
+			"cmd" : "close_repo",
+			"repo" : "r1",
+			"comment" : "Close this repo."
+		}
+	]
+}
+

@@ -1,0 +1,137 @@
+// JSON does not allow comments, but this file sort-of does.
+// Any line where the first two non-whitespace characters
+// are '//' will be discarded before it is passed to the
+// JSON parser.  Note that these are not end-of-line comments.
+// These are WHOLE LINE comments.
+
+// TODO how to tie these users to other systems like LDAP?
+
+{
+    "version" : 1,
+    "rectypes" :
+    {
+        "user" :
+        {
+            "merge_type" : "field",
+            "fields" : 
+            {
+                "email" :
+                {
+                    "datatype" : "string",
+                    "constraints" :
+                    {
+                        "required" : true,
+
+                        // maxlength: see RFC 3696 amended and RFC 5321
+                        "maxlength" : 256,
+
+                        "unique" : true
+                    }
+                },
+                "prefix" :
+                {
+                    "datatype" : "string",
+                    "constraints" :
+                    {
+                        "required" : true,
+                        "minlength" : 1,
+                        "maxlength" : 4,
+                        "defaultfunc" : "gen_random_unique",
+                        "genchars" : "ABCDEFGHJKLMNPQRSTUVWXYZ",
+                        "unique" : true
+                    },
+                    "merge" :
+                    {
+                        "uniqify" : 
+                        {
+                            "op" : "gen_random_unique",
+                            "which" : "least_impact"
+                        }
+                    }
+                },
+                "key" :
+                {
+                    // the content of the key should be self-describing in
+                    // terms of the key format
+
+                    "datatype" : "string",
+                    "constraints" :
+                    {
+                        "required" : false
+                    }
+                }
+            }
+        },
+
+        "group" : 
+        {
+            "fields" :
+            {
+                "name" :
+                {
+                    "datatype" : "string",
+                    "constraints" :
+                    {
+                        "unique" : true,
+                        "required" : true,
+                        "maxlength" : 64
+                    }
+                }
+            }
+        }
+    },
+
+    "directed_linktypes" :
+    {
+        "member" :    
+        {
+            "from" :
+            {
+                "link_rectypes" : 
+                [
+                    "user"
+                ],
+                "name" : "groups",
+                "required" : false,
+                "singular" : false 
+            },
+
+            "to" :
+            {
+                "link_rectypes" :
+                [
+                    "group"
+                ],
+                "name" : "members",
+                "singular" : false,
+                "required" : false 
+            } 
+        },
+
+        "subgroup" :    
+        {
+            "from" :
+            {
+                "link_rectypes" : 
+                [
+                    "group"
+                ],
+                "name" : "parents",
+                "required" : false,
+                "singular" : false 
+            },
+
+            "to" :
+            {
+                "link_rectypes" :
+                [
+                    "group"
+                ],
+                "name" : "subgroups",
+                "singular" : false,
+                "required" : false 
+            } 
+        }
+    }
+}
+

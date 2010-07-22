@@ -1,0 +1,43 @@
+src/libraries/sghash/README
+
+This directory builds the SGHASH static library.  It contains
+all of the various third-party/reference implementations of
+the various hashing algorithms that we use.
+
+Each of the reference implementations were modified sligthly
+to fit into this library.  This most meant changing references
+to header files, making all functions static, fixing some
+old-style function prototypes, and commenting
+out the routines that we don't use.  All in all, I have tried
+to minimize our changes to the actual code.
+
+For reference and to aid in any future diffs/merges, I have
+placed a copy of the original unmodified sources in the
+tree too.
+
+
+SHA1/160
+========
+
+The code for SHA1 was taken from the FreeBSD source tree.
+.../src/sys/crypto/sha1.[ch]
+
+
+SHA2/256, SHA2/384, SHA2/512
+============================
+
+The code for SHA2 was also taken from the FreeBSD source tree.
+.../src/sys/crypto/sha2/sha2.[ch]
+
+
+Skein (SHA3 Candidate)
+======================
+
+The code for Skein was taken from the NIST submission CD
+skein_NIST_CD_091409.zip.  See the following links for details:
+http://www.skein-hash.info/downloads
+http://www.skein-hash.info/sites/default/files/Skein_NIST_CD_091409.zip
+For now I've chosen the Reference_Implementation to minimize configuration
+and build issues during development; later we will want to use one of the
+optimized versions.
+

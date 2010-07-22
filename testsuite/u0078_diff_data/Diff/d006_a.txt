@@ -1,0 +1,78 @@
+         1         2         3         4
+1234567890123456789012345678901234567890
+		if (nRet == GG_NO_ERROR)
+		{
+			IVSSVersion* pIVersion = getVersionInfo(pIFile);
+			if ( pIVersion )
+			{
+				long nVerNum = 0;
+
+				ENTERCRIT(&g_vss_crit_section);
+				h = pIVersion->get_VersionNumber(&nVerNum);
+				LEAVECRIT(&g_vss_crit_section);
+
+				nVersion = (UT_uint32) nVerNum;
+
+				long nCheckedOut = 0;
+
+				ENTERCRIT(&g_vss_crit_section);
+				h = pIFile->get_IsCheckedOut(&nCheckedOut);
+				LEAVECRIT(&g_vss_crit_section);
+
+				if (nCheckedOut == VSSFILE_CHECKEDOUT_ME)
+				{
+					*ppLockedBy = new char[::strlen(m_pszUser) + 1];
+					if ( *ppLockedBy )
+						::strcpy(*ppLockedBy, m_pszUser);
+					else
+						nRet = GG_OUT_OF_MEMORY;
+				}
+				else if (nCheckedOut != VSSFILE_NOTCHECKEDOUT)
+				{
+					IVSSCheckouts* pICheckouts = NULL;
+					IVSSCheckout* pICheckout = NULL;
+					BSTR bUser = NULL;
+					
+					VARIANT v;
+					::VariantInit(&v);
+					V_VT(&v) = VT_I4;
+					V_I4(&v) = 1L;
+
+					ENTERCRIT(&g_vss_crit_section);
+					h = pIFile->get_Checkouts(&pICheckouts);
+					if ( SUCCEEDED(h) )
+					{
+						h = pICheckouts->get_Item(v, &pICheckout);
+						if ( SUCCEEDED(h) )
+							h = pICheckout->get_Username(&bUser);
+					}
+					LEAVECRIT(&g_vss_crit_section);
+
+
+					*ppLockedBy = BSTRToLPSTR(bUser);
+					DeleteBSTR(&bUser);
+
+					if ( pICheckout )
+						pICheckout->Release();
+					pICheckout = NULL;
+
+					if ( pICheckouts )
+						pICheckouts->Release();
+					pICheckouts = NULL;
+				}
+
+				double d = 0.0;
+
+				h = pIVersion->get_Date(&d);
+
+				ENTERCRIT(&g_vss_crit_section);
+				*ppDate = convertDate(d);
+				LEAVECRIT(&g_vss_crit_section);
+
+				pIVersion->Release();
+				pIVersion = NULL;
+			}
+			else
+				nRet = GG_VSS_ERROR;
+		}
+	}

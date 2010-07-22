@@ -1,0 +1,47 @@
+{{{<header.xhtml}}}
+
+<script src='/static/home.js'></script>
+
+<h2>current repo: {{{WFREPO}}}</h2> 
+
+
+<div class="left">
+<div class="section">
+<p>
+<b>Most Recent</b>
+<div id="recent">
+
+</div>
+</p>
+</div>
+<div class="section">
+
+<p>
+<a id="tagslink" href="/repos/{{{WFREPO}}}/tags">view tags</a>
+</p>
+<p>
+<a href="/repos/">view all repositories</a>
+</p>
+</div>
+
+</div>
+
+<div class="right">
+<div class="section" id="chooserepo">
+<p>
+<b>Choose Repository: </b><br/>
+
+<select id="reposelection"></select>
+</p>
+
+<p>
+<b>Choose User:</b><br/> 
+<select id="userselection">{{{USERSELECTION}}}</select>
+
+</p>
+
+
+</div>
+</div>
+
+{{{<footer.xhtml}}}

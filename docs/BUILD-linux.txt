@@ -1,0 +1,102 @@
+# Building SourceGear Veracity under Linux
+
+## Introduction
+
+This document is quite Ubuntu Linux-specific. That's the distribution used by
+our Linux-oriented developers, and *the* Linux build we test on at the moment.
+While there's nothing specifically preventing you from building Veracity 
+elsewhere, we're not (yet) able to help you.
+
+If you *are* running a recent Ubuntu version (9 or above), and are comfortable
+installing a few packages and unpacking tarballs, this document should get you
+on your way to a working Veracity build.
+
+## Getting/Unpacking the Source
+
+Retrieve the latest Veracity tarball from [sourcegear](http://www.sourcegear.com/veracity)
+
+Unpack it under the directory of your choice - for brevity, we'll pretend you 
+unpacked it under `~/v`, and so your source tree begins at `~/v/veracity`
+
+## Prerequisites
+
+### apt-get-able Packages
+
+Over and above the standard Linux C programming tools (gcc, make, and friends),
+the following tools and libraries are needed to build Veracity.  Note that 
+several of these are from the "multiverse" and "contrib" repositories.  If you
+haven't already done so, you'll want to
+[enable those](http://www.ubuntux.org/node/71).
+
+These packages should all be installed in the standard way, e.g.
+
+    sudo apt-get install zlib1g-dev
+
+Install the following packages in this manner):
+
+* cmake
+* curl
+* patch
+* zlib1g-dev
+* libicu-dev
+* libsqlite3-dev
+* uuid-dev
+* libcurl3-dev (use libcurl4-openssl-dev, instead, in Ubuntu 10.04 and later)
+
+### Third-Party Tarballs
+
+Under Linux, you'll need to get the SpiderMonkey JavaScript engine.
+
+To do so, visit [mozilla.org](https://developer.mozilla.org/en/spidermonkey)
+and grab the latest SpiderMonkey source - currently
+[v1.8 RC 1](http://ftp.mozilla.org/pub/mozilla.org/js/js-1.8.0-rc1.tar.gz)
+
+If the version number has changed, you'll need to update the tar file name in
+`thirdparty/build_linux.sh`
+
+Copy this archive to `~/v/veracity/thirdparty/archives`, then 
+`cd ~/v/veracity/thirdparty` and run:
+
+    sudo ./build_linux.sh
+
+## Creating the Build Directory
+
+`cmake` will handle the creation of Makefiles, etc. You just need to give it a
+place to work.
+
+For example, let's create a `~/v/debug`, a neighbor of our source directory.
+
+cd to this folder, then run:
+
+    cmake -G "Unix Makefiles" ../veracity
+    
+or
+
+    cmake -G "Eclipse CDT4 - Unix Makefiles" ../veracity
+    
+if you'd also like an Eclipse project. Installing Eclipse is left as an
+exercise to the reader.
+
+## Building Veracity
+
+You now have a build tree, replete with Makefiles.  You'll only need to run the
+top-level one. So:
+
+    cd ~/v/debug
+    make
+    
+upon successful completion, you should run:
+
+    make test
+    
+All tests should pass, with any exceptions noted on our
+[known issues](http://www.sourcegear.com/veracity/help/known_issues.html) page.
+
+To make your life easier at this point, you'll want to add the following to
+your path:
+
+    ~/v/debug/src/cmd
+    ~/v/debug/src/script
+    
+the homes of `vv` (the Veracity command-line app) and `vscript` (the scripting
+engine), respectively.

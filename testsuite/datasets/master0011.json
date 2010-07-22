@@ -1,0 +1,61 @@
+/* A simple test. */
+{
+	"commands" :
+	[
+		/* Create repository "r1". */
+
+		{	"cmd" : "create_new_repo",	"repo" : "r1",	"pathname" : "./repo"	},
+
+		/* Make several an intial commit "i1" repo. */
+
+		{	"cmd" : "initial_commit",	"repo" : "r1",	"name" : "r1i1"	},
+
+		/* Then make the following in "r1":
+		**
+		** [null] <--- r1i1 <--- r1c2 <--- ... <--- r1c10 <-+- r1m11
+		**                |                                 |
+		**                + <--- r1d2 <--- ... <--- r1d10 <-+
+		**                |
+		**                + <--- r1e2 <--- ... <--- r1e10
+		*/
+
+		{	"cmd" : "set_current_repo",	"repo" : "r1"	},
+		{	"cmd" : "commit_linear", 
+				"pattern" : "r1c%d",
+				"start" : 2,
+				"count" : 9,
+				"parent" : "r1i1"	},
+
+		{	"cmd" : "commit_linear", 
+				"pattern" : "r1d%d",
+				"start" : 2,
+				"count" : 9,
+				"parent" : "r1i1"	},
+
+		{	"cmd" : "commit_linear", 
+				"pattern" : "r1e%d",
+				"start" : 2,
+				"count" : 9,
+				"parent" : "r1i1"	},
+
+		{	"cmd" : "assert_leaves",	"leaves" : [ "r1c10", "r1d10", "r1e10" ]	},
+		{	"cmd" : "merge2",
+				"name" : "r1m11",
+				"parent" : "r1c10",
+				"parent2" : "r1d10"	},
+		{	"cmd" : "assert_leaves",	"leaves" : [ "r1m11", "r1e10" ]	},
+
+		/* Compute LCA. */
+
+		{	"cmd" : "compute_lca",		"leaves" : [ "r1c2", "r1d2" ] },
+		{	"cmd" : "compute_lca",		"leaves" : [ "r1c2", "r1d5" ] },
+		{	"cmd" : "compute_lca",		"leaves" : [ "r1c2", "r1d10" ] },
+		{	"cmd" : "compute_lca",		"leaves" : [ "r1c10", "r1d10" ] },
+		{	"cmd" : "compute_lca",		"leaves" : [ "r1m11", "r1e10" ],	"lca" : "r1i1" },
+
+		/* Clean up our mess. */
+
+		{	"cmd" : "close_repo",		"repo" : "r1"	}
+	]
+}
+

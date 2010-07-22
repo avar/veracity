@@ -1,0 +1,403 @@
+// JSON does not allow comments, but this file sort-of does.
+// Any line where the first two non-whitespace characters
+// are '//' will be discarded before it is passed to the
+// JSON parser.  Note that these are not end-of-line comments.
+// These are WHOLE LINE comments.
+
+{
+    "version" : 1,
+    "rectypes" :
+    {
+        "item" :
+        {
+            "merge_type" : "field",
+            "fields" :
+            {
+                // TODO time logged
+                // TODO iterations
+
+                "id" :
+                {
+                    "datatype" : "string",
+                    "constraints" :
+                    {
+                        "maxlength" : 16,
+                        "required" : true,
+                        "unique" : true,
+                        "defaultfunc" : "gen_userprefix_unique"
+                    },
+                    "merge" :
+                    {
+                        "uniqify" :
+                        {
+                            "op" : "inc_digits_end",
+                            "which" : "least_impact"
+                        }
+                    },
+		    "form" :
+		    {
+			"label" : "Work Item ID"
+
+		    }
+                },
+                "assignee" :
+                {
+                    "datatype" : "userid",
+                    "form" :
+                    {
+                        "label": "Assignee"
+		    }
+                },
+                "reporter" :
+                {
+                    "datatype" : "userid",
+                    "form" :
+                    {
+                        "label": "Reporter"
+		    }
+                },
+                "verifier" :
+                {
+                    "datatype" : "userid",
+                    "form" :
+                    {
+                        "label": "Verifier"
+		    }
+                },
+                "title" :
+                {
+                    "datatype" : "string",
+                    "constraints" :
+                    {
+                        "maxlength" : 140,
+                        "required" : true
+                    },
+		    "form" :
+		    {
+			"label" : "Summary",
+			"tooltip"  : "A brief summary of this work item",
+			"column" : 2
+		    }
+                },
+                "description" :
+                {
+                    "datatype" : "string",
+                    "constraints" :
+                    {
+                        "required" : false,
+                        "maxlength" : 16384
+                    },
+		    "form" :
+		    {
+			"label" : "Details",
+			"tooltip"  : "Optional, longer description of this work item.",
+			"help" : "This is the place to be as detailed as possible in describing requirements, symptoms, wanted and unwanted behaviors, etc.",
+			"column" : 2,
+			"multiline" : true
+		    }
+                },
+                "original_estimate" :
+                {
+                    "datatype" : "int",
+                    "constraints" :
+                    {
+                        "min" : 0
+                    },
+                    "form" :
+                    {
+                        "label": "Original time estimate (in hours)",
+						"scale": "60"
+                    }
+                },
+                "logged_time" :
+                {
+                    "datatype" : "int",
+                    "constraints" :
+                    {
+                        "min" : 0,
+                        "defaultvalue" : 0
+                    },
+                    "form" :
+                    {
+                        "label": "Time logged (in hours)",
+						"scale": "60"
+                    }
+                },
+                "status" :
+                {
+                    "datatype" : "string",
+                    "constraints" :
+                    {
+                        "allowed" :
+                        [
+                            "open",
+                            "fixed",
+                            "verified",
+			    "wontfix",
+			    "invalid",
+			    "duplicate"
+                        ],
+                        "sort_by_allowed" : true
+                    },
+		    "form" :
+		    {
+			"column" : 2,
+			"label" : "Status"
+		    }
+                },
+                "priority" :
+                {
+                    "datatype" : "string",
+                    "constraints" :
+                    {
+                        "allowed" :
+                        [
+                            "High",
+                            "Medium",
+                            "Low"
+                        ]
+                    },
+		    "form" :
+		    {
+			"column" : 2,
+			"label" : "Priority"
+		    }
+                },
+		"listorder" :
+		{
+		  "datatype" : "int",
+		  "constraints" :
+		  {
+			"required" : false
+		  },
+		  "form" :
+		  {
+		  	 "visible": false
+		  }
+		}
+
+            }
+        },
+
+        "vc_changeset" :
+        {
+            "fields" :
+            {
+                "commit" :
+                {
+                    "datatype" : "dagnode",
+                    "constraints" :
+                    {
+                        "dag" : "VERSION_CONTROL"
+                    },
+		    "form" :
+		    {
+			"label" : "Associated Changesets"
+
+		    }
+
+                }
+            }
+        },
+
+        "comment" :
+        {
+            "fields" :
+            {
+                "text" :
+                {
+                    "datatype" : "string",
+                    "constraints" :
+                    {
+                        "maxlength" : 16384
+                    } ,
+		    "form" :
+		    {
+			"label" : "Comments",
+			"multiline" : true
+		    }
+
+                },
+                "who" :
+                {
+                    "datatype" : "userid",
+                    "constraints" :
+                    {
+                        "required" : true,
+                        "defaultvalue" : "whoami"
+                    }
+                },
+                "when" :
+                {
+                    "datatype" : "datetime",
+                    "constraints" :
+                    {
+                        "required" : true,
+                        "defaultvalue" : "now"
+                    }
+                }
+            }
+        },
+
+        "attachment" :
+        {
+            "fields" :
+            {
+                // TODO a description for the attachment?
+                "data" :
+                {
+                    "datatype" : "attachment",
+		    "form" :
+		    {
+		  	"visible": false,
+			"label" : "Attachments (TBD)"
+		    }
+                }
+
+            }
+        },
+
+        "sprint" :
+        {
+            "fields" :
+            {
+                "name" :
+                {
+                    "datatype" : "string",
+                    "constraints":
+                    {
+                        "required": true
+                    }
+                },
+                "description" :
+                {
+                    "datatype" : "string",
+                    "constraints":
+                    {
+                        "required": true
+                    }
+                },
+                "startdate" :
+                {
+                    "datatype" : "datetime",
+                    "constraints" :
+                    {
+                        "required" : false
+                    }
+                },
+                "enddate" :
+                {
+                    "datatype" : "datetime",
+                    "constraints" :
+                    {
+                        "required" : false
+                    }
+                }
+            }
+        }
+
+    },
+
+    "directed_linktypes" :
+    {
+        "vc_changeset_to_item" :
+        {
+            "from" :
+            {
+                "link_rectypes" :
+                [
+                    "vc_changeset"
+                ],
+                "name" : "items",
+                "required" : true,
+                "singular" : false
+            },
+
+            "to" :
+            {
+                "link_rectypes" :
+                [
+                    "item"
+                ],
+                "name" : "changesets",
+                "singular" : false,
+                "required" : false
+            }
+        },
+        "comment_to_item" :
+        {
+            "from" :
+            {
+                "link_rectypes" :
+                [
+                    "comment"
+                ],
+                "name" : "item",
+                "required" : true,
+                "singular" : true
+            },
+
+            "to" :
+            {
+                "link_rectypes" :
+                [
+                    "item"
+                ],
+                "name" : "comments",
+                "singular" : false,
+                "required" : false
+            }
+        },
+
+        "item_to_sprint" :
+        {
+            "from" :
+            {
+                "link_rectypes" :
+                [
+                    "item"
+                ],
+                "name" : "sprint",
+                "required" : false,
+                "singular" : true
+            },
+
+            "to" :
+            {
+                "link_rectypes" :
+                [
+                    "sprint"
+                ],
+                "name" : "items",
+                "singular" : false,
+                "required" : false
+            }
+        },
+
+        "attachment_to_item" :
+        {
+            "from" :
+            {
+                "link_rectypes" :
+                [
+                    "attachment"
+                ],
+                "name" : "item",
+                "required" : true,
+                "singular" : true
+            },
+
+            "to" :
+            {
+                "link_rectypes" :
+                [
+                    "item"
+                ],
+                "name" : "attachments",
+                "singular" : false,
+                "required" : false
+            }
+        }
+    }
+}
+

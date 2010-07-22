@@ -1,0 +1,42 @@
+/* Test the LCA code. */
+{
+	"commands" :
+	[
+		/* Create repository "r1". */
+
+		{	"cmd" : "create_new_repo",	"repo" : "r1",	"pathname" : "./repo"	},
+		{	"cmd" : "set_current_repo",	"repo" : "r1"	},
+
+		/* This test is concerned with computing the LCA on
+		** relatively simple 2-way branches and merges (and
+		** without criss-crosses.
+		**
+		** Make the following:
+		**
+		**                [NULL ROOT]
+		**                    |
+		**                    A
+		**                   / \.
+		**                  B   C
+		**                 /     \.
+		**                D       E
+		**
+		*/
+
+		{	"cmd" : "initial_commit",	"name" : "A"	},
+		{	"cmd" : "commit",		"name" : "B",	"parent" : "A"	},
+		{	"cmd" : "commit",		"name" : "C",	"parent" : "A"	},
+		{	"cmd" : "commit",		"name" : "D",	"parent" : "B"	},
+		{	"cmd" : "commit",		"name" : "E",	"parent" : "C"	},
+
+		{	"cmd" : "compute_lca",		"leaves" : [ "B", "C" ],	"lca" : "A" },
+		{	"cmd" : "compute_lca",		"leaves" : [ "D", "C" ],	"lca" : "A" },
+		{	"cmd" : "compute_lca",		"leaves" : [ "B", "E" ],	"lca" : "A" },
+		{	"cmd" : "compute_lca",		"leaves" : [ "D", "E" ],	"lca" : "A" },
+
+		/* Clean up our mess. */
+
+		{	"cmd" : "close_repo",		"repo" : "r1"	}
+	]
+}
+

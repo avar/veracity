@@ -1,0 +1,27 @@
+all three the same 1
+mod, orig, lat
+all three the same 2
+mod, orig, _lat_
+all three the same 3
+_mod_, orig, _lat_
+all three the same 4
+mod, orig, _lat_
+all three the same 5
+orig, lat
+all three the same 6
+all three the same 7
+mod, lat
+all three the same 8
+all three the same 9
+only lat
+all three the same 10
+all three the same 11
+all three the same 12
+_lat_
+all three the same 13
+_lat_
+all three the same 14
+this is the NEW file
+all three the same 15
+this IS inserted IS inserted  inserted
+all three the same 16

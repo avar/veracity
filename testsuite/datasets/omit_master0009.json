@@ -1,0 +1,163 @@
+/* A simple test. */
+{
+	"commands" :
+	[
+		/* Create 3 repositories: r1, r2, and r3. */
+
+		{	"cmd" : "create_new_repo",	"repo" : "r1",	"pathname" : "./repo"	},
+		{	"cmd" : "clone_repo",		"repo" : "r1",	"repodest" : "r2"	},
+		{	"cmd" : "clone_repo",		"repo" : "r1",	"repodest" : "r3"	},
+
+		/* Make an initial commit "i1" in each repo.
+		**
+		** We create a unique initial commit in each repo because we cannot currently
+		** push blobs between repos (see master0010.json).
+		**
+		** So when we push stuff back and forth we will have 3 completely independent
+		** branches in the dag -- 3 initial commits.  Since we can't prevent this from
+		** happening in real life, we might as well test it.
+		*/
+
+		{	"cmd" : "initial_commit",	"repo" : "r1",	"name" : "r1i1"	},
+		{	"cmd" : "initial_commit",	"repo" : "r2",	"name" : "r2i1"	},
+		{	"cmd" : "initial_commit",	"repo" : "r3",	"name" : "r3i1"	},
+
+		/* Then make the following in "r1":
+		**
+		** [null] <--- r1i1 <--- r1c2 <--- ... <--- r1c10 <-+- r1m11
+		**                |                                 |
+		**                + <--- r1d2 <--- ... <--- r1d10 <-+
+		**                |
+		**                + <--- r1e2 <--- ... <--- r1e10
+		*/
+
+		{	"cmd" : "set_current_repo",	"repo" : "r1"	},
+		{	"cmd" : "commit_linear", 
+				"pattern" : "r1c%d",
+				"start" : 2,
+				"count" : 9,
+				"parent" : "r1i1"	},
+
+		{	"cmd" : "commit_linear", 
+				"pattern" : "r1d%d",
+				"start" : 2,
+				"count" : 9,
+				"parent" : "r1i1"	},
+
+		{	"cmd" : "commit_linear", 
+				"pattern" : "r1e%d",
+				"start" : 2,
+				"count" : 9,
+				"parent" : "r1i1"	},
+
+		{	"cmd" : "assert_leaves",	"leaves" : [ "r1c10", "r1d10", "r1e10" ]	},
+		{	"cmd" : "merge2",
+				"name" : "r1m11",
+				"parent" : "r1c10",
+				"parent2" : "r1d10"	},
+		{	"cmd" : "assert_leaves",	"leaves" : [ "r1m11", "r1e10" ]	},
+
+		/* Then make the following in "r2":
+		**
+		** [null] <--- r2i1 <--- r2x2 <--- ... <--- r2x10 <-+- r2m11
+		**                |                                 |
+		**                + <--- r2y2 <--- ... <--- r2y10 <-+
+		**                |
+		**                + <--- r2z2 <--- ... <--- r2z10
+		*/
+
+		{	"cmd" : "set_current_repo",	"repo" : "r2"	},
+		{	"cmd" : "commit_linear", 
+				"pattern" : "r2x%d",
+				"start" : 2,
+				"count" : 9,
+				"parent" : "r2i1"	},
+
+		{	"cmd" : "commit_linear", 
+				"pattern" : "r2y%d",
+				"start" : 2,
+				"count" : 9,
+				"parent" : "r2i1"	},
+
+		{	"cmd" : "commit_linear", 
+				"pattern" : "r2z%d",
+				"start" : 2,
+				"count" : 9,
+				"parent" : "r2i1"	},
+
+		{	"cmd" : "assert_leaves",	"leaves" : [ "r2x10", "r2y10", "r2z10" ]	},
+		{	"cmd" : "merge2",
+				"name" : "r2m11",
+				"parent" : "r2x10",
+				"parent2" : "r2y10"	},
+		{	"cmd" : "assert_leaves",	"leaves" : [ "r2m11", "r2z10" ]	},
+
+		/* Then make the following in "r3":
+		**
+		** [null] <--- r3i1 <--- r3t2 <--- ... <--- r3t10
+		**                |
+		**                + <--- r3u2 <--- ... <--- r3u10
+		**                |
+		**                + <--- r3v2 <--- ... <--- r3v10
+		*/
+
+		{	"cmd" : "set_current_repo",	"repo" : "r3"	},
+		{	"cmd" : "commit_linear", 
+				"pattern" : "r3t%d",
+				"start" : 2,
+				"count" : 9,
+				"parent" : "r3i1"	},
+
+		{	"cmd" : "commit_linear", 
+				"pattern" : "r3u%d",
+				"start" : 2,
+				"count" : 9,
+				"parent" : "r3i1"	},
+
+		{	"cmd" : "commit_linear", 
+				"pattern" : "r3v%d",
+				"start" : 2,
+				"count" : 9,
+				"parent" : "r3i1"	},
+
+		{	"cmd" : "assert_leaves",	"leaves" : [ "r3t10", "r3u10", "r3v10" ]	},
+
+		/* Push from "r1" to "r2".
+		** Push from "r1" to "r3".
+		** Then push "r2" back to "r1".
+		** Then push "r3" back to "r1"
+		**
+		** Then "r1" should have all nodes.
+		*/
+
+		{	"cmd" : "assert_leaves",	"repo" : "r1",	"leaves" : [ "r1m11", "r1e10" ]	},
+		{	"cmd" : "assert_leaves",	"repo" : "r2",	"leaves" : [ "r2m11", "r2z10" ]	},
+		{	"cmd" : "assert_leaves",	"repo" : "r3",	"leaves" : [ "r3t10", "r3u10", "r3v10" ]	},
+
+		{	"cmd" : "push_dagfrag",		"repo" : "r1",	"repodest" : "r2"	},
+		{	"cmd" : "push_dagfrag",		"repo" : "r1",	"repodest" : "r3"	},
+
+		{	"cmd" : "assert_leaves",	"repo" : "r2",	"leaves" : [ "r1m11", "r1e10", "r2m11", "r2z10" ] },
+		{	"cmd" : "assert_leaves",	"repo" : "r3",	"leaves" : [ "r1m11", "r1e10", "r3t10", "r3u10", "r3v10"  ] },
+
+		{	"cmd" : "push_dagfrag",		"repo" : "r2",	"repodest" : "r1"	},
+		{	"cmd" : "push_dagfrag",		"repo" : "r3",	"repodest" : "r1"	},
+		{	"cmd" : "assert_leaves",	"repo" : "r1",	"leaves" : [ "r1m11", "r1e10", "r2m11", "r2z10", "r3t10", "r3u10", "r3v10"  ] },
+
+		/* Then push "r2" to "r3" and  "r3" to "r2".  Then everyone should have all nodes. */
+
+		{	"cmd" : "push_dagfrag",		"repo" : "r3",	"repodest" : "r2"	},
+		{	"cmd" : "push_dagfrag",		"repo" : "r2",	"repodest" : "r3"	},
+
+		{	"cmd" : "assert_leaves",	"repo" : "r1",	"leaves" : [ "r1m11", "r1e10", "r2m11", "r2z10", "r3t10", "r3u10", "r3v10"  ] },
+		{	"cmd" : "assert_leaves",	"repo" : "r2",	"leaves" : [ "r1m11", "r1e10", "r2m11", "r2z10", "r3t10", "r3u10", "r3v10"  ] },
+		{	"cmd" : "assert_leaves",	"repo" : "r3",	"leaves" : [ "r1m11", "r1e10", "r2m11", "r2z10", "r3t10", "r3u10", "r3v10"  ] },
+
+		/* Clean up our mess. */
+
+		{	"cmd" : "close_repo",		"repo" : "r1"	},
+		{	"cmd" : "close_repo",		"repo" : "r2"	},
+		{	"cmd" : "close_repo",		"repo" : "r3"	}
+	]
+}
+

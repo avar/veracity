@@ -1,0 +1,72 @@
+{{{<header.xhtml}}}
+
+<script src='/static/getchangeset.js'></script>
+	<h2>Revision: <span id="revid_short"></span>&nbsp; <a href="#" id="zip_repo"><img id="downloadimg" src="/static/css/images/downloadgreen3.png"/></a><div id="nav"><span id="parent_nav"></span>&nbsp;<span id="current_nav"></span>&nbsp;<span id="child_nav"></span></div></h2>
+	
+		
+	<div class="left">
+	<div class="section">
+		<b>ID:</b> <span id="revid"></span><br/><br/>
+		<b>User:</b> <span id="who"></span><br/>
+		<b>Date:</b> <span id="when"></span><br/><br/>	
+	</div>
+	<div class="section">
+		<b>Parents:</b> <br/><span id="parents"></span><br/>	
+	
+	</div>
+	<div class="section">
+	<div class="csfiles">
+		<b>Changes:</b> <a id="browse" href="#">browse changeset</a>
+		<span id="changes"></span>
+	</div>
+	</div>
+	</div>
+	
+	<div class="right">
+		
+	<div class="section">
+		<p>
+		<b>Tags:</b><br/>	
+			<input type="text" width="80%" id="inputtag"/>		
+			<span class="button" onclick="javascript:postTag()" id="addtag">add</span>	
+		</p>
+		<p>	
+			<div id="tags"></div>
+		</p>
+		
+	</div>
+	<div class="section">
+		<p>
+				<b>Stamps:</b><br/>
+				<input type="text" id="inputstamp"/>
+				<span class="button" onclick="javascript:postStamp()" id="addstamp">add</span>
+		</p>
+		<p>
+				<div id="stamps"></div>
+	    </p>
+	</div>
+	<div class="section">
+		<form id="commentform" >	
+			<p valign="top">
+						
+				
+					<b>Comments:</b><br/>			
+					
+					<textarea id="inputcomment" rows="3" cols="30" ></textarea>
+				
+					<span class="button" onclick="javascript:postComment()" id="submit">add</span>
+					
+			</p>		
+			<p>
+					<div id="comment">	
+					</div>
+					
+				
+				
+			</p>
+			</form>	
+	</div>
+
+	</div>
+	<div id="backgroundPopup"></div>  
+{{{<footer.xhtml}}}

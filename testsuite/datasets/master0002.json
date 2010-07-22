@@ -1,0 +1,24 @@
+{
+	"comment" : "A main test script that does what...",
+	"commands" :
+	[
+		{
+			"cmd" : "create_new_repo",
+			"repo" : "r1",
+			"pathname" : "./repo",
+			"comment" : "Creates a new repo in the given directory and initializes it.  We don't care about the RepoID.  We can refer to this repo by the symbolic name 'r1'."
+		},
+		{
+			"cmd" : "initial_commit",
+			"repo" : "r1",
+			"name" : "c1",
+			"comment" : "Create an initial commit (one with no parents) in the current or named repo."
+		},
+		{
+			"cmd" : "close_repo",
+			"repo" : "r1",
+			"comment" : "Close this repo."
+		}
+	]
+}
+

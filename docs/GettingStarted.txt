@@ -1,0 +1,149 @@
+# I've built Veracity, now what?
+
+You've had a succesful build, the `vv` command is in your path,
+and you'd like to actually *do* something.  Let's get you 
+started with a local repository, then see what it takes to
+push, pull and merge with others.
+
+## Creating a repository
+
+Choose your favorite projects folder, or temp, or whatever. Let's
+say you've chosen `~/projects`. Now create a `vvtest` working folder
+under that:
+
+    cd ~/projects
+    mkdir vvtest
+    cd vvtest
+    vv init vvtestrepo
+    
+Two things happened: a `vvtestrepo` repository was created, and
+your current directory (`~/projects/vvtest`) became a working
+copy of that repository. The repository, and the folder, are empty
+right now.
+
+## Who am I?
+
+We should tell Veracity who you are. Run
+
+    vv users
+    
+to list users Veracity is currently aware of on your machine. You'll
+see a friendly name (probably an email), followed by a long GUID string
+which you can mostly ignore.
+
+If you don't see yourself in this list, add yourself as follows:
+
+    vv createuser myemail@example.com
+    
+Now when you run `vv users`, your email and your very own big ugly
+GUID will be displayed.
+
+Actually *using* this ID requires that you say:
+
+    vv whoami myemail@example.com
+    
+## Adding some stuff
+
+Let's give Veracity something to do.  Create a file:
+
+    echo Hello, world > file.txt
+    
+Then say
+
+    vv status
+    
+and you should see
+
+    Found: @/file.txt
+    
+"Found" means Veracity sees a file it doesn't yet know about. "@/" is the
+root of the repository.  To tell Veracity to keep track of this file:
+
+    vv add file.txt
+    
+`vv status` will now say:
+
+    Added: @/file.txt
+    
+Let's commit that to the repository, so we can play with it a bit.
+
+    vv commit -m"I added a file"
+    
+Where `-m="..."` is the comment that will be associated with this checkin.
+
+Things we can now do:
+
+    vv rename file.txt somethingelse.txt
+    vv move file.txt someotherdir/
+    vv remove file.txt
+    
+All of which must be followed by a `vv commit` to be recorded.  Prior to 
+that, `vv revert` can undo your changes.
+
+If you change the file on disk, e.g.
+
+    echo Another line >> file.txt
+    
+`vv status` will list it as "Modified".  You can see the changes by saying
+`vv diff file.txt` for one file, or just `vv diff` to see all uncommitted
+file changes.
+
+## Running the server
+
+So far, this is all local.  To share your code and changes with others,
+you'll need to run a server, or connect to someone else's. For now, 
+you'll be the server.
+
+The first thing you'll need to do is tell Veracity where to find its
+collateral files (stylesheets, javascript, HTML templates, etc.) 
+
+If you unpacked the source according to the BUILD documentation, your
+collateral files live in `~/v/veracity/src/cmd/static` and 
+`~/v/veracity/src/cmd/templates`. If not, find the relevant directories
+in your world. That common parent, `~/v/veracity/src/cmd` is what you're after.
+
+Let's say your home directory (~) is really `/home/someguy`. You'll want to
+do the following:
+
+    vv localsettings set server/files /home/someguy/v/veracity/src/cmd
+    
+Now, still in your `vvtest` directory, run:
+
+    vv serve
+    
+Veracity's internal web server is up and running on Port 8080. Open a browser
+(not IE, just yet, but Chrome, Safari, Firefox should work nicely) and
+you can see your history, add work items, and so on. 
+
+## Playing with Others
+
+What you can *also* do is push and pull code through this server.
+
+Assuming the machine you've been using is `vvhost`, move over to `vvclient`.
+
+On the client, to get a working copy of that same code:
+
+    cd ~/projects/
+    vv clone http://vvhost:8080/repos/vvtestrepo
+    vv checkout vvtestrepo vvtest
+    cd vvtest
+   
+And you're in a working folder of a copy of the original repo.
+
+Make your own local changes, commit them, then:
+
+    vv push
+   
+to send them back to the host. If you see an error complaining that
+this would create multiple heads, that means there are changes on the 
+host side that you haven't pulled yet.  Get those, merge them locally,
+*then* push.    Actually, it's a better idea to *always* pull, merge,
+run unit tests, and commit the merge before pushing.
+
+    vv pull
+    vv merge
+    # test, test, test
+    vv commit -m"merged changes from host"
+    vv push
+   
+   

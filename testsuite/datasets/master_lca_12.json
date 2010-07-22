@@ -1,0 +1,118 @@
+/* Test the LCA code. */
+{
+	"commands" :
+	[
+		/* Create repository "r1". */
+
+		{	"cmd" : "create_new_repo",	"repo" : "r1",	"pathname" : "./repo"	},
+		{	"cmd" : "set_current_repo",	"repo" : "r1"	},
+
+		/* This test is concerned with computing the LCA on
+		** relatively simple 2-way branches and merges *WITH*
+		** criss-crosses.
+		**
+		** Make the following:
+		**
+		**                [NULL ROOT]
+		**                    |
+		**                    A
+		**                   / \.
+		**                  B   C
+		**                 /     \.
+		**                D       E
+		**               / \.
+		**              F    G
+		**              |\  /|\.
+		**              | \/ | \.
+		**              | /\ |  \.
+		**              |/  \|   \.
+		**              H    I    X
+		**              |\  /|\.
+		**              | \/ | \.
+		**              | /\ |  \.
+		**              |/  \|   \.
+		**              J    K    Y
+		**
+		**
+		**
+		**
+		*/
+
+		{	"cmd" : "initial_commit",	"name" : "A"	},
+		{	"cmd" : "commit",		"name" : "B",	"parent" : "A"	},
+		{	"cmd" : "commit",		"name" : "C",	"parent" : "A"	},
+		{	"cmd" : "commit",		"name" : "D",	"parent" : "B"	},
+		{	"cmd" : "commit",		"name" : "E",	"parent" : "C"	},
+		{	"cmd" : "commit",		"name" : "F",	"parent" : "D"	},
+		{	"cmd" : "commit",		"name" : "G",	"parent" : "D"	},
+
+		{	"cmd" : "merge2",		"name" : "H",	"parent" : "F",	"parent2" : "G"	},
+		{	"cmd" : "merge2",		"name" : "I",	"parent" : "F",	"parent2" : "G"	},
+
+		{	"cmd" : "merge2",		"name" : "J",	"parent" : "H",	"parent2" : "I"	},
+		{	"cmd" : "merge2",		"name" : "K",	"parent" : "H",	"parent2" : "I"	},
+
+		{	"cmd" : "commit",		"name" : "X",	"parent" : "G"	},
+		{	"cmd" : "commit",		"name" : "Y",	"parent" : "I"	},
+
+
+		{	"cmd" : "compute_lca",		"leaves" : [ "F", "G" ],	"lca" : "D" },
+
+		/*
+		** H and I are children of a criss-cross.  D is LCA. and F and G are SPCAs.
+		*/
+		{	"cmd" : "compute_lca",		"leaves" : [ "H", "I" ],
+			      				"lca" : "D",	"lca_children" : [ "F", "G" ],
+							"spca" : { "F" : [ "H", "I" ],
+							       	   "G" : [ "H", "I" ] } },
+
+		/*
+		** Likewise J and K are children of a criss-cross.  D is LCA. and F, G, H, and I are SPCAs.
+		*/
+		{	"cmd" : "compute_lca",		"leaves" : [ "J", "K" ],
+			      				"lca" : "D",	"lca_children" : [ "F", "G" ],
+							"spca" : { "F" : [ "H", "I" ],
+							       	   "G" : [ "H", "I" ],
+								   "H" : [ "J", "K" ],
+								   "I" : [ "J", "K" ] } },
+
+		/*
+		** See what happens to the criss-cross when we add X to the mix.
+		** D is LCA. F and G are SPCAs (even though G is immediate ancestor
+		** of all 3 leaves, we need D because F and G are criss-cross peers.
+		*/
+		{	"cmd" : "compute_lca",		"leaves" : [ "H", "I", "X" ],
+			      				"lca" : "D",	"lca_children" : [ "F", "G" ],
+							"spca" : { "F" : [ "H", "I" ],
+							       	   "G" : [ "H", "I", "X" ] } },
+
+		/*
+		** See what happens to the criss-cross when we add Y to the mix.
+		** D is LCA.
+		*/
+		{	"cmd" : "compute_lca",		"leaves" : [ "J", "K", "Y" ],
+			      				"lca" : "D",	"lca_children" : [ "F", "G" ],
+							"spca" : { "F" : [ "H", "I" ],
+							       	   "G" : [ "H", "I" ],
+								   "H" : [ "J", "K" ],
+								   "I" : [ "J", "K", "Y" ] } },
+
+		/*
+		** See what happens to the criss-cross when we add both X and Y to the mix.
+		** D is LCA.
+		*/
+		{	"cmd" : "compute_lca",		"leaves" : [ "J", "K", "X", "Y" ],
+			      				"lca" : "D",	"lca_children" : [ "F", "G" ],
+							"spca" : { "F" : [ "H", "I" ],
+							       	   "G" : [ "H", "I", "X" ],
+								   "H" : [ "J", "K" ],
+								   "I" : [ "J", "K", "Y" ] } },
+
+
+
+		/* Clean up our mess. */
+
+		{	"cmd" : "close_repo",		"repo" : "r1"	}
+	]
+}
+

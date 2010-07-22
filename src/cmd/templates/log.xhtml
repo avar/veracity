@@ -1,0 +1,31 @@
+{{{<header.xhtml}}}
+
+<div style='width: 800px; height: 500px; overflow: scroll;' id='svgcontainer'></div>
+
+<script type="text/javascript" src="/static/dag.js"></script>
+
+<script type="text/javascript">
+<![CDATA[
+var relations = {};
+
+
+function drawdag(svg) {
+    var container = this;
+    $(container).addClass('spinning');	
+	
+    jQuery.getJSON('/repos/{{{WFREPO}}}/history', function(data) {
+	relations = data;
+	$(container).removeClass('spinning');	
+	drawIt(container, svg); 
+    });
+}
+
+function sgKickoff()
+{
+    $('#svgcontainer').svg({onLoad: drawdag});
+}
+
+]]>
+</script>
+
+{{{<footer.xhtml}}}

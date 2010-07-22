@@ -1,0 +1,65 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<!-- header -->
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head><title>{{{TITLE}}}</title>
+<link rel="stylesheet" type="text/css" href="/static/sg.css" />
+<link rel="stylesheet" type="text/css" href="/static/prettify.css" />
+<link rel="stylesheet" type="text/css" href="/static/css/custom-theme/jquery-ui-1.8.2.custom.css" />
+<link rel="stylesheet" type="text/css" href="/static/css/custom-theme/jquery.ui.autocomplete.css" />
+<link rel="stylesheet" type="text/css" href="/static/css/custom-theme/jquery.ui.datepicker.css" />
+
+
+<script src='/static/jquery-1.4.2.js'></script>
+<script src='/static/utils.js'></script>
+<script src='/static/prettify.js'></script>
+<script src='/static/jquery-ui-1.8.1.custom.min.js'></script>
+
+<link rel="alternate" type="application/atom+xml" href="/repos/{{{WFREPO}}}/activity" title="activity in {{{WFREPO}}}" />
+</head><body>
+<div id="top">
+<div id="logo">
+</div>
+
+<ul id="topmenu">
+<li id="/repos/{{{WFREPO}}}/home/"><a class="menulink" href="/repos/{{{WFREPO}}}/home/">home</a></li>
+<li id="workingdir" class="menudropdown">working directory<img id="imgmenudropdown" src="/static/css/images/closegreen.png"/>
+<ul class="submenu">
+		<li class="submenuli" id="/local/status/"><a href="/local/status/">status</a></li>
+		<li class="submenuli" id="/local/fs/"><a href="/local/fs/">browse</a></li>
+</ul>
+</li>
+<li id="/repos/{{{WFREPO}}}/history/"><a class="menulink" href="/repos/{{{WFREPO}}}/history/">history</a></li>
+<li id="/repos/{{{WFREPO}}}/wit/records/"><a class="menulink" href="/repos/{{{WFREPO}}}/wit/records/">work items</a></li>
+<li id="/repos/{{{WFREPO}}}/burndown/"><a class="menulink" href="/repos/{{{WFREPO}}}/burndown/">burndown</a></li>
+<li id="/repos/{{{WFREPO}}}/todo/"><a class="menulink" href="/repos/{{{WFREPO}}}/todo/">todo</a></li>
+</ul>
+
+<ul id="identity">
+<li><span id="useremail"/></li>
+<li>{{{WFREPO}}}</li>
+</ul>
+
+</div>
+
+<div id="activity">
+
+<form id="newactivity">
+  <fieldset>  
+    <textarea name="whatidid" id="whatidid"></textarea>
+    <input type="submit" value="send" />
+  </fieldset>
+  
+</form>
+    <span class="hide"><a  id="linkhideact" href="#"><img id="imghideact" src="/static/css/images/doublecloseblue.png"/></a></span>
+
+
+<div id="activitylist"></div>
+<div id="activitynav"></div>
+
+</div>
+
+
+
+<div id="maincontent">

@@ -1,0 +1,1012 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+
+
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Fixing Unix/Linux/POSIX Filenames</title>
+<meta name="description" content="Fixing Unix/Linux/POSIX Filenames">
+<meta name="keywords" content="Unix, Linux, POSIX, filename, file name, filenames, file names, control character, newline, tab, escape, leading dash, leading dashes, UTF-8, encoding, metacharacter, limits, limitations, fixing, filesystem">
+<meta name="generator" content="vim">
+<link rel="stylesheet" type="text/css" href="dwheeler.com_fixing-unix-linux-filenames_files/paper.css">
+
+</head><body bgcolor="#ffffff">
+
+<h1 class="title">Fixing Unix/Linux/POSIX Filenames</h1>
+<h2 class="author">David A. Wheeler</h2>
+<h2 class="date">2009-03-24</h2>
+
+<p>
+</p><blockquote>
+<center>
+<i>
+Seek freedom and become captive of your desires, seek discipline and find your liberty. - Frank Herbert, Dune
+<br>
+<br>
+"Negative freedom is freedom from constraint, that is, permission to do things;
+Positive freedom is empowerment, that is, ability to do things...
+Negative and positive freedoms, it might seem, are
+two different descriptions of the same thing.
+No! Life is not so simple. There is reason to think that constraints
+(prohibitions, if you like) can actually help people to do things
+better. Constraints can enhance ability; in other words, less negative
+freedom can mean more positive freedom."
+ - <a href="http://www.equilibrium-economicum.net/twokindsoffreedom.htm">
+ Angus Sibley, "Two Kinds of Freedom"</a>
+</i>
+</center>
+</blockquote>
+<!--
+<p>
+I don't believe in total freedom for the artist. Left on his own, free to do anything he likes, the artist ends up doing nothing at all. - Federico Fellini
+<p>
+My freedom will be so much the greater and more meaningful the more narrowly I limit my field of action and the more I surround myself with obstacles. Whatever diminishes constraint diminishes strength. The more constraints one imposes, the more one frees one's self of the chains that shackle the spirit.
+    - Igor Stravinsky), Poetics of Music
+<p>
+With self-discipline most anything is possible. - Theodore Roosevelt
+-->
+
+<p></p><hr><p>
+
+</p><p>
+<a href="http://lwn.net/Articles/71472/">
+Traditionally, Unix/Linux/POSIX filenames can be almost
+any sequence of bytes</a>, and their meaning is unassigned.
+The only real rules are that "/" is always the directory separator,
+and that filenames can't contain byte 0 (because this
+is the terminator).
+Although this is flexible, this creates many unnecessary problems.
+In particular, this lack of limitations
+makes it unnecessarily difficult to write correct programs
+(<a href="http://www.dwheeler.com/secure-programs/Secure-Programs-HOWTO/file-names.html">enabling many security flaws</a>),
+makes it impossible to consistently and accurately display filenames,
+and it confuses users.
+</p><p>
+This article will try to convince you that
+<a href="#complications">
+adding <i>some</i> limitations on legal Unix/Linux/POSIX
+filenames would be an improvement</a>.
+<a href="#standards">
+Many programs <i>already</i> presume these limitations,
+the POSIX standard <i>already</i> permits such limitations, and
+many Unix/Linux filesystems <i>already</i> embed such limitations</a> -
+so it'd be better to make these (reasonable) assumptions
+true in the first place.
+This article will discuss, in particular,
+the problems of
+<a href="#control">control characters in filenames</a>,
+<a href="#dashes">leading dashes in filenames</a>, the
+<a href="#utf8">lack of a standard encoding scheme (vs. UTF-8)</a>,
+and
+<a href="#metacharacters">special metacharacters in filenames</a>.
+<a href="#spaces">Spaces in filenames</a> are probably hopeless in general,
+but resolving some of the other issues will simplify their handling too.
+This article will then
+<a href="#todo"> briefly discuss some methods for solving this long-term</a>,
+though that's not easy - if I've convinced you that this needs improving,
+I'd like your help figuring out how to do it!
+
+</p><p></p><hr><p>
+
+</p><p>
+</p><h1><a name="complications">A Tale of Complications</a></h1>
+<p>
+Imagine that you don't know Unix/Linux/POSIX
+(I presume you really do), and that you're trying to do some simple
+things with it.
+For example, let's try to print out the contents of all files in
+the current directory, putting it into a file above:
+</p><pre> cat * &gt; ../collection
+</pre>
+<p>
+The list doesn't include "hidden" items
+(filenames beginning with "."), but often that's what you want anyway,
+so that's not unreasonable.
+The problem is that although this
+<i>seems</i> to work, filenames could begin with "-" (e.g., "-n").
+So if there's a file named "-n", and you're using GNU cat, all of a sudden
+your output will be numbered!
+Oops; that means on <i>every</i> command we have to disable option processing;
+for most commands that means using "--" everywhere, except not all commands
+support "--" (ugh!).
+Many people know that prefixing the filename or glob with "./" can
+resolve this, but not all programs do such prefixing, so when you're writing
+a new program you can't guarantee that the caller has prefixed it for you.
+</p><p>
+The "cat *" command will complain if there are directories; in
+theory, we could just replace the "*" with something that computes the
+list of file names (which will also include the hidden files):
+</p><pre> cat -- `find . -type f` &gt; ../collection
+</pre>
+<p>
+Whups, that fails too!
+Filenames can include spaces, which causes splitting.
+Advanced users can fiddle with IFS, but a simpler approach is to use
+a "while" loop or xargs:
+</p><pre> ( find . -type f |
+   while read -r filename ; do cat "$filename" ; done ) &gt; ../collection
+ # OR 
+ ( find . -type f | xargs -d "\n" cat ) &gt; ../collection
+</pre>
+<p>
+Whups, these don't work either - these create a list of filenames separated
+by newlines, but filenames can include newlines too!
+This is hard to handle portably; if you use GNU find and xargs, you can
+use GNU extensions to separate filenames with \0:
+</p><pre> ( find . -type f -print0 | xargs -0 cat ) &gt; ../collection
+</pre>
+<p>
+But this convention is supported by only a few tools,
+they tend to be non-standard (non-portable) extensions,
+the option names to use this convention are jarringly inconsistent
+(GNU has sort -z, find -print0, and xargs -0),
+and this format is difficult to view and modify
+(because so few tools support it).
+Which is silly; processing lines of text files is well-supported, and
+filenames are commonly-handled, but you can't simply
+have filenames separated by newlines?!?
+</p><p>
+Ugh - lots of annoying problems, caused not because we don't have
+enough flexibility, but because we have too much.
+You can't use newline and tab to delimit filenames,
+because filenames could include them!
+<a href="http://wooledge.org:8000/BashFAQ/020">BashFAQ discusses
+handling newlines</a>, as do many other documents about shell scripts.
+</p><p>
+In a well-designed system, simple things should be simple, and
+the "obvious easy" way to do something should be the right way.
+I call this goal "<i>no sharp edges</i>" - to use an analogy,
+if you're designing a wrench, don't put razor blades on the handles.
+The current POSIX filesystem fails this test - it <i>does</i> have sharp edges.
+Because it's hard to do things the "right" way, many Unix/Linux programs
+simply assume that "filenames are reasonable", even though the system
+doesn't guarantee that this is true.
+This leads to programs with errors that aren't immediately obvious.
+In some cases, these errors can even be security vulnerabilities
+(see
+<a href="http://cwe.mitre.org/data/definitions/78.html">CWE 78</a>,
+<a href="http://cwe.mitre.org/data/definitions/73.html">CWE 73</a>, and
+<a href="http://cwe.mitre.org/data/definitions/116.html">CWE 116</a>,
+all of which are in the
+<a href="http://cwe.mitre.org/top25/index.html">2009 CWE/SANS
+Top 25 Most Dangerous Programming Errors</a>, as well as the
+<a href="http://www.dwheeler.com/secure-programs/Secure-Programs-HOWTO/file-names.html">"Secure Programming..." text on filenames</a>).
+It would be better if the system actually <i>did</i> guarantee that
+filenames were reasonable; then already-written programs would
+be correct.
+</p><p>
+The problem is so bad that there are programs like
+<a href="http://linux.die.net/man/1/detoxrc">detox</a> and
+<a href="http://www.glindra.org/doc/cleanup">Glindra</a> that try to
+fix "bad" filenames.
+But the real problem is that they were allowed in the first place -
+cleaning them later is a second-best approach.
+
+</p><p>
+</p><h1><a name="standards">Programs Assume It, Standards Permit It, Operating Systems Already Do It</a></h1>
+
+<p>
+</p><h2>Programs Assume It</h2>
+<p>
+Lots of programs fail to handle "bad" filenames, such as filenames with
+newlines in them, because it's harder to write programs that
+handle such filenames correctly.
+In several cases, developers have specifically stated that there's
+no point in supporting such filenames!
+For example:
+</p><ul>
+<li>
+<a href="http://unix.derkeiler.com/Newsgroups/comp.unix.shell/2006-03/msg01221.html">John DuBois stated on 2006-03-27</a> that
+"Newlines in filenames are mainly something you would encounter in a malicious
+context - created by a local user, included in an archive, etc. Since I don't
+expect to ever see a *useful* file with a newline embedded in its name, and
+using newline-terminated filenames is often more convenient than using
+null-terminated filenames, some of the utilities I write simply ignore them".
+</li><li>As of this writing,
+<a href="https://bugs.launchpad.net/bzr/+bug/3918">bzr can't handle newlines
+in filenames</a>, and there's no consensus that it even <i>should</i>.
+</li><li><a href="http://www.mail-archive.com/bug-cvs@gnu.org/msg05255.html">
+Some versions of CVS fail if filenames have newlines</a>.
+</li><li>Key security program
+<a href="http://osdir.com/ml/version-control.monotone.devel/2003-11/msg00045.html">sha1sum performs odd undocumented behavior when certain
+odd characters (like newline) are in filenames</a> - here
+there's an attempt to handle odd filenames,
+but because it's an undocumented and non-standard result,
+it can make the problem <i>worse</i>.
+</li><li><a href="http://calypso.tux.org/pipermail/novalug/2009-February/017524.html">
+Michael Henry's Novalug post
+"Filename handling: correctness vs. convenience"
+(2009-02-28)</a>
+notes that "In the Unix culture, there has been a historical bias
+against filenames with 'odd' characters... [because they]
+are harder to deal with at the command line and in scripts...
+they tend to be avoided in Unix filenames.  As a result of this scarcity of
+unusual filenames, there are often shortcuts that can be taken to avoid
+the hassle fully general filename handling.  These shortcuts truly save
+a lot of time, and I use them myself frequently; however ...
+Many of the shortcuts are in essence buggy approximations to a robust
+general-case solution, but they are so much more convenient than the
+fully correct solution".
+</li><li>A Fedora discussion on
+<a href="http://forums.fedoraforum.org/archive/index.php/t-166962.html">
+"How to iterate over files in a bash script?"</a> ended up suggesting
+an approach that doesn't work if filenames contain newlines.
+</li></ul>
+
+<p>
+Failure to handle "bad" filenames can lead to mysterious failures and even
+security problems...  but only if they can happen at all.
+If "bad" filenames can't occur, the problems they cause go away too!
+
+</p><p>
+</p><h2>Standards Permit It</h2>
+<p>
+The POSIX standard defines what a "portable filename" is; this definition
+implies that many filenames are <i>not</i> portable and thus
+do not need to be supported by POSIX systems.
+The POSIX.1-2008 specification is simultaneously released as both
+<a href="http://www.opengroup.org/products/publications/catalog/c082.htm">
+The Open Group's Base Specifications Issue 7</a> and
+IEEE Std 1003.1(TM)-2008; I'll emphasize the Open Group's version,
+since it is available at no charge via the Internet (good job!!).
+Its "base definitions" document section 4.7 ("Filename Portability") says:
+</p><blockquote>
+For a filename to be portable across implementations conforming to
+POSIX.1-2008, it shall consist only of the portable filename character
+set as defined in Portable Filename Character Set.
+Portable filenames shall not have the &lt;hyphen&gt; character as the
+first character since this may cause problems when filenames are passed
+as command line arguments.
+</blockquote>
+<p>
+I then examined the Portable Filename Character Set, defined in 3.276
+("Portable Filename Character Set"); this turns out to be just A-Z, a-z, 0-9,
+&lt;period&gt;, &lt;underscore&gt;, and &lt;hyphen&gt;.
+So it's perfectly okay for a POSIX system to reject a non-portable filename. 
+
+</p><p>
+</p><h2>Operating Systems Already Do It</h2>
+<p>
+Indeed, existing POSIX systems <i>already</i> reject some filenames.
+A common reason is that many POSIX systems mount local or remote filesystems
+that have additional rules, e.g., for Microsoft Windows.
+<a href="http://en.wikipedia.org/wiki/Filename">Wikipedia's entry on
+Filenames</a>
+reports on these rules in more detail.
+For example, the Microsoft Windows kernel
+forbids the use of characters in range 1-31 (i.e., 0x01-0x1F) in filenames,
+so any such filenames can't be shared with Windows users, and they're
+not supposed to be stored on their filesystems.
+I wrote some code and found that
+<a href="http://www.dwheeler.com/essays/bad-filename.c">the Linux msdos module (which supports one of the
+Windows filesystems) already rejects some
+"bad" filenames, returning the EINVAL error message instead</a>.
+</p><p>
+So some application developers <i>already</i> assume that filenames aren't
+"unreasonable",
+the existing standard (POSIX) <i>already</i>
+permits operating systems to reject certain kinds of filenames, and
+existing POSIX systems <i>already</i> reject certain filenames
+in some circumstances.
+In that case, what kinds of limitations could we add to filenames that would
+<i>help</i> users and software developers?
+
+</p><p>
+</p><h1><a name="control">Control Characters in Filenames are a Terrible Idea</a></h1>
+<p>
+First:
+Why the heck are the ASCII control characters (bytes 1 through 31)
+permitted in filenames?
+There's no advantage to keeping these as legal characters,
+and the problems are legion:
+they can't be reasonably displayed, many are troublesome to enter
+(especially in GUIs!), and they cause nothing but nasty side-effects.
+They also cause portability problems, since filesystems for Microsoft Windows
+can't contain them anyway.
+
+</p><p>
+One of the nastiest permitted control character is the newline character.
+Many programs work a line-at-a-time, with a filename as the content or
+part of the content; this is great, except it fails
+when a newline can be in the filename.
+Many programs simply ignore the problem, and presume that there are no
+newlines in filenames.
+But this creates a subtle bug, possibly even a vulnerability -
+better to make the no-newline assumption true in the first place!
+I know of <i>no</i> program that legitimately requires the ability to
+insert newlines in a filename.
+Indeed, it's not hard to find comments like
+"<a href="http://unix.derkeiler.com/Newsgroups/comp.unix.shell/2006-03/msg00484.html">ban newlines in filenames</a>".
+GNU's "find" and "xargs" make it possible to work around this by
+inserting byte 0 between each filename... but few other programs support this
+convention (even "ls" normally doesn't).
+Using byte 0 as the separator is a pain to use anyway;
+who wants to read the intermediate output of this?
+
+</p><p>
+The "tab" character is another control character that makes no sense;
+if tabs are <i>never</i> in filenames, then it's an great character to use
+as a "column separator" for multi-column data output - especially since
+many programs <i>already</i> use this convention.
+But the tab character isn't safe to use (easily) if it can be part of
+a filename.
+
+</p><p>
+Some control characters, particularly the escape (ESC) character, can cause
+all sorts of display problems, including security problems.
+Terminals (like xterm, gnome-terminal, the Linux console, etc.) implement
+control sequences.
+Most software developers don't understand that merely <i>displaying</i>
+filenames can cause security problems if they can contain control characters.
+The GNU ls program tries to protect users from this effect by default
+(see the -N option), but many people display filenames
+without getting filtered by ls - and the problem returns.
+<a href="http://seclists.org/fulldisclosure/2003/Feb/0341.html">
+H. D. Moore's "Terminal Emulator Security Issues" (2003)</a>
+summarizes some of the security issues;
+modern terminal emulators try to disable the most dangerous ones, but
+they can still cause trouble.
+A filename with embedded control characters can (when displayed) cause
+function keys to be renamed, set X atoms, change displays in misleading
+ways, and so on.
+To counter this, some programs modify control characters
+(such as find and ls) - making it even harder to correctly
+handle files with such names.
+<!--
+For background,
+<a href="http://invisible-island.net/xterm/ctlseqs/ctlseqs.html">
+here's a list of some of the control sequences supported by xterm</a> -
+echo -e '\0033[2J'
+-->
+
+</p><p>
+In any case, filenames with control characters aren't portable.
+<a href="http://www.opengroup.org/products/publications/catalog/c082.htm">
+POSIX.1-2008</a> doesn't include
+control characters in the "portable filename character set",
+implying that such filenames aren't portable per the POSIX standard.
+<a href="http://en.wikipedia.org/wiki/Filename">Wikipedia's entry on
+Filenames</a>
+notes that the Windows kernel
+forbids the use of characters in range 1-31 (i.e., 0x01-0x1F),
+so any such filenames can't be shared with Windows users, and they're
+not supposed to be stored on their filesystems.
+
+</p><p>
+In contrast, if control characters are forbidden, then you can safely use
+control characters like TAB and NEWLINE as filename separators, and the
+risk of displaying unfiltered control characters from this source goes away.
+As noted above, software developers
+make these assumptions anyway; it'd be great if it was safe to do so.
+
+</p><p>
+</p><h1><a name="dashes">Leading Dashes in Filenames are a Terrible Idea</a></h1>
+<p>
+The "leading dash" problem is an ancient problem in Unix/Linux/POSIX.
+This is another example of the
+general problem that there's interaction between overly-flexible filenames
+with other system components (particularly option flags and shell scripts).
+</p><p>
+<a href="http://web.mit.edu/%7Esimsong/www/ugh.pdf">The Unix-haters handbook</a>
+page 27 (PDF page 67) notes problems these decisions cause:
+"By convention, programs accept their options as their first argument, usu-
+ally preceded by a dash (–)...  Finally, Unix filenames can contain
+most characters, including nonprinting ones. This is flaw #3. These archi-
+tectural choices interact badly. The shell lists files alphabetically when
+expanding “*”, and the dash (-) comes first in the lexicographic caste sys-
+tem. Therefore, filenames that begin with a dash (-) appear first when “*”
+is used. These filenames become options to the invoked program, yielding
+unpredictable, surprising, and dangerous behavior...
+[e.g., "rm *" will expand filenames beginning with dash, and use those as
+options to rm]...
+We’ve known several people who have made a typo while renaming a file
+that resulted in a filename that began with a dash: "% mv file1 -file2"
+Now just try to name it back...
+Doesn’t it seem a little crazy that a filename beginning with a hypen, espe-
+cially when that dash is the result of a wildcard match, is treated as an
+option list?"
+Indeed, people repeatedly ask how to
+<a href="http://www.unix.com/unix-dummies-questions-answers/75869-ignoring-dash-file-name.html">ignore leading dashes in filenames</a> - yes, you can
+prepend "./", but why do you need to know this at all?
+
+</p><p>
+The list of problems that "leading dash filenames" creates
+is seemingly endless.   You can't safely run "cat *", because
+there might be a file with a leading dash; if there's a file named "-n",
+then suddenly all the output is numbered if you use GNU cat.
+Not all programs support the "--" convention, so you can't simply say
+"precede all command lists with --", and in any case, people forget to do
+this in real life.
+You could prefix the name or glob with "./"; that's a good solution, but
+people don't know or often forget to do this.
+The result: You're almost guaranteed to have programs that break (or
+are vulnerable) when filenames beginning with dash are created.
+
+</p><p>
+<a href="http://www.opengroup.org/products/publications/catalog/c082.htm">
+POSIX.1-2008</a>'s
+"base definitions" document section 4.7 ("Filename Portability") specifically
+says "Portable filenames shall not have the &lt;hyphen&gt; character
+as the first character since this may cause problems when filenames are
+passed as command line arguments".
+So filenames with leading hyphens are <i>already</i> specifically
+identified as non-portable in the POSIX standard.
+
+</p><p>
+There's no reason that a filesystem <i>must</i> permit
+filenames to begin with a dash.
+If such filenames were forbidden, then writing safe shell scripts would be
+much simpler - if a parameter
+begins with a "-", then it's an option and there is no other possibility.
+
+</p><p>
+</p><h1><a name="utf8">Lack of an Encoding Standard is a Terrible Idea - Use UTF-8</a></h1>
+<p>
+With today's march towards globalization, computers must support
+the sharing of information using many different languages.
+Given that, it's crazy that there's no standard encoding for filenames across
+all Unix/Linux/POSIX systems.
+At the beginnings of Unix, everyone assumed that filenames could only
+be English text, but that hasn't been true for a long time.
+Yet because you can't know the character encoding of a given filename,
+in theory you can't display filenames at all today.
+Why? Because then you don't know how to translate the bytes of a filename
+into displayable characters (!).
+This is true for GUIs, and even for the command line.
+Yet you <i>must</i> be able to display filenames, so you need to 
+make <i>some</i> determination... and it will be wrong.
+
+</p><p>
+The usual approach is to use environment variables to guess what the
+filename encoding is.
+But as soon as you start working with other people
+(say, by receiving a tarball or sharing a filesystem),
+the single environment variable approach fails.
+That's because single-environment-variable approach assumes that the
+entire filesystem uses the same encoding, but
+once there's sharing, different parts of
+the filesystem can (and often do) use different encoding systems.
+In short, there's no currently
+guarantee that two people share the same convention.
+Should you interpret the bytes in a filename as UTF-8?
+ISO-8859-1? One of the other ISO-8859-* encodings?
+KOI8-* (for Cyrillic)? EUC-JP or Shift-JIS (both popular in Japan)?
+In short, this is too flexible!
+<a href="http://www.opengroup.org/platform/single_unix_specification/show_mail.tpl?CALLER=index.tpl&amp;source=L&amp;listname=austin-group-l&amp;id=12033&amp;listid=austin-group-l">
+The Austin Group even had a discussion about this in 2009</a>.
+This failure to standardize the encoding leads to confusion, which can lead to
+mistakes and even vulnerabilities.
+
+</p><p>
+Yet this flexibility is actually not flexible enough,
+because the current filesystem requirements don't permit arbitrary encodings.
+If you want to store arbitrary international text, you need to use
+Unicode/ISO-10646, and then pick one of its several encodings... but
+its other common encodings (UTF-16 and UTF-32)
+that must be able to store byte 0.
+But those don't work because you <i>can't</i> use byte 0 in a filename.
+It's also not flexible in another way: There's no mechanism to find out
+what encoding is used on a given filesystem.
+If one person uses ISO-8859-1, there's no obvious way to find out about it.
+In theory, you could store the encoding system with the filename, and then
+use multiple system calls to find out what encoding was used for each name..
+but really, who <i>needs</i> that kind of complexity?!?
+
+</p><p>
+If you want to store arbitrary language characters using todays'
+Unix/Linux/POSIX filesystem, the <i>only</i> widely-used
+answer that "simply works" for all languages is UTF-8.
+Any other approach would require nonstandard additions like adding
+sort of "character encoding" value with the filesystem, which would
+then require user programs to examine and use this encoding value.
+Users and software developers don't need more complexity - they want less.
+If people simply agreed that "all filenames will be sent in/out of the
+kernel in UTF-8 format", then all programs would work correctly;
+programs could simply retrieve a filename and print it, knowing that
+the filename is in UTF-8.
+<a href="http://plan9.bell-labs.com/sys/doc/utf.pdf">Plan 9
+already did this</a>, and showed that you could do this on a POSIX-like system.
+Indeed,
+<a href="http://www.cl.cam.ac.uk/%7Emgk25/ucs/utf-8-history.txt">UTF-8 was
+developed by Unix luminaries Ken Thompson and Rob Pike</a>
+specifically to support arbitrary language characters on Unix-like systems.
+
+</p><p>
+Some filesystems store filenames in other formats, but all of them have
+mount options to translate in/out of UTF-8 for userspace.
+In fact, some filesystems require a specific encoding on-disk for
+filenames, but to do this correctly, the kernel has to know which
+encoding is being used for the data sent in and out (e.g., with
+iocharset).
+But not all filesystems can do this conversion, and how do you find out
+which options are used where?!?
+Again, the simple answer is "use UTF-8 everywhere".
+
+</p><p>
+There's also another reason to use UTF-8 in filenames: Normalization.
+Some symbols have more than one Unicode representation
+(e.g., a character might be followed by accent 1 then accent 2, or by
+accent 2 then accent 1).
+They'd look the same, but would be considered different when compared
+byte-for-byte, and there's more than one normalization system
+(Linux programs and the W3C use normally use NFC,
+but Darwin and MacOS X normally use use NFD).
+If you have a filename in a non-Unicode encoding,
+then it's ambiguous how you "should" translate these to Unicode,
+making simple questions like "is this file already there" tricky.
+But if you store the name as UTF-8 encoded Unicode, then there's no trouble;
+you can just use the filename using whatever normalization convention was used
+when the file was created (presuming that the on-disk representation
+also uses some Unicode encoding).
+
+</p><p>
+<a href="http://lwn.net/Articles/71472/">
+Samba's developer has identified yet another reason - case handling</a>.
+Efficiently implementing Windows' filesystem semantics, where uppercase and
+lowercase are considered identical, requires that you be able to
+know what is "uppercase" and what is "lowercase".
+This is only practical if you know what the filename encoding is
+in the first place.
+Again, a single encoding system for all filenames, from the application
+point of view, is almost required to make this efficient.
+
+</p><p>
+Converting from one encoding to another can be a pain; systems
+need to support graceful upgrades to UTF-8.
+Thankfully, there's a program named "convmv" that can help;
+it was designed to be
+"very handy when one wants to switch over from old
+8-bit locales to UTF-8 locales".
+
+</p><p>
+Again, let's look at
+<a href="http://www.opengroup.org/products/publications/catalog/c082.htm">
+7</a>
+("POSIX.1-2008 is simultaneously IEEE Std 1003.1(TM)-2008
+and The Open Group Technical Standard Base Specifications, Issue 7.")
+Its "Portable Filename Character Set" (defined in 3.276)
+is only A-Z, a-z, 0-9, &lt;period&gt;, &lt;underscore&gt;, and &lt;hyphen&gt;.
+Note that this is a very restrictive list; few international speakers
+would accept this limited list, since it would mean they must only use
+English filenames.
+That's rediculous; most computer users don't even <i>know</i> English.
+So why is this standard so restrictive?
+That's <i>because</i> there's no standard encoding;
+since you don't know if a filename is UTF-8 or something else, there's
+no way to portably share filenames with non-English characters.
+If we <i>did</i> agree that UTF-8 encoding is used, the set of portable
+characters could include all languages.
+In other words, the lack of a standard <i>creates</i> arbitrary and
+unreasonable limitations.
+
+</p><p>
+Linux distributions are already moving towards storing filenames in UTF-8,
+for this very reason.
+<a href="http://fedoraproject.org/wiki/Packaging/Guidelines#Non-ASCII_Filenames">Fedora's packaging guidelines</a> require that
+"filenames that contain non-ASCII characters must be encoded as
+UTF-8. Since there's no way to note which encoding the filename is in,
+using the same encoding for all filenames is the best way to ensure
+users can read the filenames properly."
+<a href="http://en.opensuse.org/SDB:Converting_Files_or_File_Names_to_UTF-8_Encoding">OpenSuSE 9.1</a> has already switched to using UTF-8 as the default
+system character set ("lang_LANG.UTF-8").
+<a href="https://help.ubuntu.com/community/LocaleConf">Ubuntu recommends
+using UTF-8</a>, saying "A good rule is to choose utf-8 locales",
+and provides a
+<a href="https://wiki.ubuntu.com/UTFEightMigrationTool">
+UTF-8 migration tool</a> as part of its
+<a href="https://wiki.ubuntu.com/UTFEightByDefault">UTF-8 by default</a>
+feature.
+
+</p><p>
+The major POSIX GUI suites, GNOME and KDE, seem to be moving this way too:
+</p><ol>
+<li>In a 2003 discussion about GNOME,
+<a href="http://osdir.com/ml/gnome.vfs.general/2003-03/msg00014.html">
+Michael Meeks</a> noted that
+"using locale encoded filenames on the disk is a really,
+really bad idea :-) simply because there is never sufficient information
+to unwind the encoding (think networking, file sharing, etc.).
+So - the right way to go is utf-8 everywhere".
+He noted that although GNOME has an option G_BROKEN_FILENAMES,
+it is "only a way to help migration towards that. The issue of course is that
+the whole Unix world needs fixing to be UTF-8 happy..."
+</li><li>KDE has this problem, too.
+They do their best to deal with it by guessing from the user's locale,
+but they also have the option
+<a href="http://techbase.kde.org/KDE_System_Administration/Environment_Variables#KDE_UTF8_FILENAMES">KDE_UTF8_FILENAMES</a> so that
+UTF-8-everywhere filesystems are easily handled.
+<a href="http://www.andlinux.org/forum/viewtopic.php?t=310">This note
+may be of interest too</a>.
+</li></ol>
+
+<p>
+This is definitely a longer-term approach.
+Systems have to support UTF-8 as well as the many older encodings, giving
+people time to switch to UTF-8.
+To use "UTF-8 everywhere", all tools need to be updated to support UTF-8.
+Years ago, this was a big problem, but as of 2009 this is mostly a
+solved problem, and I think the trajectory is very clear.
+
+</p><p>
+However, if everyone moves to UTF-8 filenames, there's an interesting
+problem: Certain byte sequences are illegal in UTF-8.
+When getting filenames, you don't want to have to keep checking on this.
+If the kernel enforces these restrictions, ensuring that only
+UTF-8 filenames are allowed, then there's no problem.
+
+</p><p>
+The filesystem should be requiring that filenames meet <i>some</i>
+standard, not because of some evil need to control people, but simply
+so that the names can always be displayed correctly at a later time.
+The lack of standards makes things <i>harder</i> for users, not easier.
+Yet the filesystem doesn't force filenames to be UTF-8, so it can easily
+have garbage.
+
+</p><p>
+</p><h1><a name="metacharacters">Metacharacters in Filenames Are Unfortunate</a></h1>
+<p>
+If filenames could not contain shell metacharacters, then a number
+of security problems would go away, and it'd be a lot easier for
+users to enter filenames.
+Often, shell programs are flattened into single long strings, and although
+filenames are <i>supposed</i> to be escaped if they have unusual characters,
+it's not at all unusual for a program to fail to escape something correctly.
+If filenames never had characters that needed to be escaped, there'd be
+one less operation that could fail.
+
+</p><p>
+I doubt these limitations could be agreed upon across all POSIX systems, but
+it'd be nice if administrators could configure specific systems to prevent
+such filenames on higher-value systems.
+This requires that software developers not use such metacharacters
+in filenames, but these aren't part of the POSIX portable filename set anyway.
+
+</p><p>
+I'll grant that this is less important; with the steps above, a lot of
+programs and statements like "cat *" just work correctly.
+But funny characters cause troubles for command-line users, because they
+need to quote them when typing in commands.. and they often forget to do so.
+A useful starting-point list is "<b>*?:[]"&lt;&gt;|(){}&amp;'!</b>"
+(this is Glindra's "safe" list with ampersand, single-quote, and bang added).
+This list is probably a little extreme, but let's try and see
+(I think colon is no big deal by itself on most Unix/Linux systems, but
+it does cause trouble with Windows and MacOS systems).
+Note that &lt; and &gt;, and &amp; are on the list; this eliminates many
+HTML/XML problems!
+I'd need to go through a complete analysis of all characters for a final list;
+for security, you want to identify everything that is permissible, and
+disallow everything else, but its manifestation can be either way as long
+as you've considered all possible cases.
+
+</p><p>
+In fact, for portability's sake, you already don't want to create
+filenames with weird characters either.
+<a href="http://www.xvsxp.com/files/forbidden.php">MacOS and Windows XP
+also forbid certain characters/names</a>.
+Some MacOS filesystems and interfaces
+forbid ":" in a name (it's the directory separator).
+Microsoft Windows won't let you begin filenames with a space or dot, and it
+also restricts these characters:
+</p><pre>  <b>: * ? " &lt; &gt; |</b>
+</pre>
+Also, in Windows, \ and / are both interpreted as directory name separators,
+and according to that page there are some
+issues with ".", "[", "]", ";", "=", and ",".
+
+<p>
+For more info, see
+<a href="http://en.wikipedia.org/wiki/Filename">Wikipedia's entry on
+Filenames</a>.
+Windows' NTFS rules are actually complicated:
+</p><blockquote>
+Windows kernel forbids the use of characters in range 1-31 (i.e.,
+0x01-0x1F) and characters " * : &lt; &gt; ? \ / |. Although NTFS allows
+each path component (directory or filename) to be 255 characters
+long and paths up to about 32767 characters long, the Windows kernel
+only supports paths up to 259 characters long. Additionally, Windows
+forbids the use of the MS-DOS device names AUX, CLOCK$, COM1, COM2,
+COM3, COM4, COM5, COM6, COM7, COM8, COM9, CON, LPT1, LPT2, LPT3, LPT4,
+LPT5, LPT6, LPT7, LPT8, LPT9, NUL and PRN, as well as these names with
+any extension (for example, AUX.txt), except when using Long UNC paths
+(ex. \\.\C:\nul.txt or \\?\D:\aux\con). (In fact, CLOCK$ may be used if
+an extension is provided.) These restrictions only apply to Windows -
+Linux, for example, allows use of " * : &lt; &gt; ? \ / | even in NTFS.
+</blockquote>
+
+<p>
+Note here that Microsoft Windows makes a number of
+terrible mistakes with its filesystem.
+It has very arbitrary limits on particular filenames;
+merely having a file named "com1.txt" can cause problems on a Windows system!
+The point is not to duplicate the mistakes of other systems!
+Instead, the goal is to have simple rules that make it easy to
+avoid common mistakes.
+We need something that is neither "everything is permissible" nor
+"capricious, hard-to-follow rules".
+
+</p><p>
+</p><h1><a name="spaces">Spaces in Filenames: Already too late</a></h1>
+
+<p>
+It'd be easier and cleaner to write fully-correct shell scripts
+if filenames couldn't include any kind of whitespace.
+There's no reason anyone needs tab or newline in filenames, as noted above,
+so that leaves us with the space character.
+Indeed, there are a lot of existing Unix/Linux programs that presume there
+are no space characters in filenames
+(many RPM spec files make this assumption; this can be enforced
+in their constrained environment).
+Unfortunately, a lot of people <i>do</i> have filenames with embedded spaces.
+In theory, "_" would suffice instead of space,
+but I suspect that users won't go along.
+Indeed, you essentially <i>cannot</i> handle typical Windows and
+MacOS filenames without handling filenames with an embedded space,
+so while this would make things easier, this is a lost cause.
+</p><p>
+However, this is no disaster.
+Many "obvious" shell programs actually work correctly,
+even in the presence of spaces.
+E.G., "cat *" will work correctly, even if some filenames have spaces,
+with bash, zsh, ksh, and even busybox's shell.
+</p><p>
+More importantly,
+once newlines and tabs <i>cannot</i> happen in filenames, programs
+can safely use newlines and tabs as delimeters between filenames.
+Having safe delimiters makes spaces in filenames much easier to handle.
+In particular,
+shell programs can then safely do what many already do: Use programs like
+'find' to create a list of filenames (one per line), and then process the
+filenames a line at a time.
+</p><p>
+Shell script writers can use an additional trick
+if newlines and tabs can't be in filenames.
+Shell script writers for Bourne-like shells could set the IFS variable to
+just tab and newline (removing "space" entirely, which is usually the
+first character in IFS).
+Doing this means that space is no longer an input separator - only tabs and
+newlines separate input values.
+Setting the IFS variable to just tab and newline would make
+lists of filenames much easier to deal with, even if they contain spaces;
+you can then have programs produce filenames separated by newlines (or tabs)
+and process them directly, even if they have embedded spaces.
+One annoying problem is actually <i>setting</i> IFS;
+it's awkward to set IFS to just tab and newline using only standard POSIX shell
+capabilities
+<!--
+the POSIX standard doesn't include the $'...' construct, and newlines
+are stripped from the end of return values, so this can be awkward to do.
+-->
+Many shell implementations support the $'...' extension,
+including bash, ksh (korn shell), and zsh (Z shell);
+in those shells you can just do IFS=$'\t\n'.
+As the <a href="http://kornshell.com/doc/faq.html">korn shell documentation</a>
+says, the purpose of $'...' is to
+'solve the problem of entering special characters in scripts [using]
+ANSI-C rules to translate the string...  It would have been cleaner
+to have all "..." strings handle ANSI-C escapes, but that would
+not be backwards compatible.'
+It might be useful to try to get $'...' in the POSIX standard, specifically
+to simplify this case.
+<!--
+If setting IFS became a common convention in shell scripts, it might be best if
+some programs switched to using tab or newline as their separator by default
+instead of space; on a quick scan, I've found that many programs (like seq)
+<i>already</i> do this, and the definition of IFS makes this
+essentially automatic for built-in commands (the first character of IFS
+is used as the separator for variables like $*).
+Since the "IFS" variable is very old and standardized,
+setting it this way should be very portable!
+-->
+Once IFS is reset like this, filenames with spaces become much
+simpler to handle.
+</p><p>
+
+</p><p>
+</p><h1><a name="todo">What to do?</a></h1>
+<p>
+
+</p><p>
+In sum:
+It'd be far better if filenames were more limited so that they would be
+safer and easier to use.
+This would eliminate a whole class of errors and vulnerabilities in programs
+that "look correct" but subtly fail when unusual filenames are created
+(possibly by attackers).
+
+</p><p>
+In general,
+<a href="http://www.xml.com/ldd/chapter/book/ch01.html#t1">
+kernels should emphasize mechanism not policy</a>.
+But in these cases, as noted above,
+the problem is so bad that there are programs like
+<a href="http://linux.die.net/man/1/detoxrc">detox</a> and
+<a href="http://www.glindra.org/doc/cleanup">Glindra</a> to fix bad filenames.
+What's worse, there's no method for <i>enforcing</i>
+policy - there's often no easy way to enforce "you may not create
+filenames with this pattern".
+There's not even a standard way to report when such a policy is
+being enforced, or of telling people what filenames are fine.
+In the longer term, systems could
+auto-rename "bad" file names if they appear on a
+pre-existing filesystems.
+This is difficult; it's better to prevent bad filenames in the first place.
+
+</p><p>
+So what steps could be taken to clean this up slowly, over time, without
+causing undue burdens to anyone?
+Here are some ideas:
+</p><ol>
+<li>Get standards bodies to clearly document the error code
+to be returned if a "bad" filename is used.
+The reality is that Unix-like systems <i>already</i> mount filesystems
+with more restrictive naming rules (like MSDOS and NTFS), and must return
+errors, so it'd be best if they agreed on what to do in such cases.
+If possible, include in the standards some hints at
+likely conditions when a filename would be rejected, so that developers
+can avoid creating such (non-portable) filenames.
+For example, it could note that this is especially likely to
+occur if the filename includes
+control characters (bytes 0x00-0x1f), a leading dash in a component,
+punctuation not in the "portable" list, or is not a valid UTF-8 encoding.
+I suggest that EINVAL be the official error code that's returned
+when bad filenames are rejected; there is precedence for this, since
+<a href="http://www.dwheeler.com/essays/bad-filename.c">the Linux msdos module already returns EINVAL
+when someone attempts to create a bad filename</a>.
+<!-- http://www.opengroup.org/austin/aardvark/ -->
+
+</li><li>
+Make it possible for system administrators
+to <i>easily</i> tell the kernel to reject creation of "bad" filenames.
+My idea is to make it possible to load an optional kernel module that, when
+loaded, will check filenames before they're created, and reject
+"illegal" filenames (perhaps returning EINVAL).
+By only forbidding their creation, we don't have to worry about these
+problems, and for a lot of users, this is sufficient.
+Let's talk about how this could be implemented in Linux, specifically.
+Ideally this would be a pluggable
+<a href="http://en.wikipedia.org/wiki/Linux_Security_Modules">Linux
+Security Module</a>, but I suspect that won't work.
+People typically already have a big LSM module installed,
+there's more than one used by different distros,
+and there's no support for "stacking" multiple LSM modules in the stock
+kernel (stacking is a capability I helped develop early on, but it hasn't
+been accepted).
+So instead of an LSM module, it'd probably need to be a separate capability,
+with a "hook" implemented as a trivial Linux kernel patch.
+Just patch functions that create filesystem entries
+(e.g., in version 2.6.27 file fs/namei.c function do_filp_open()), so that
+once you know you're trying to "create", check the planned filename.
+Another option is by creating a special pass-through filesystem, but the
+additional complexity such a filesystem would add doesn't seem necessary.
+<!--
+This idea might be implemented using a special filesystem; it could
+even be implemented by FUSE (though efficiency would be an issue).
+This shouldn't be hard; just check operations like
+open() is called with O_CREAT, and fail if the filename matches.
+-->
+Once this exists, experimentation on determining what is a "bad" filename
+can go on (below).
+
+</li><li>
+In the long term, it might be possible to get people to add
+"auto-rename" functions (so that "bad" filenames can't even be seen).
+
+</li></ol>
+
+<p>
+This won't happen overnight; many programs will still have
+to handle "bad" filenames as this transition occurs.
+But we can start making bad filenames impossible now, so that future
+software developers won't have to deal with them.
+
+</p><p>
+What is "bad", though?  Even if they aren't universal, it'd be useful
+to have a common list so that software developers could avoid creating
+"non-portable" filenames.
+Some restrictions are easier to convince people of than others;
+administrators of a locked-down system might be interested in a
+longer list of rules.
+Here are possible rules, in order of
+importance (I'd do the first two right away, the third as consensus
+can be achieved, and the later ones would probably only apply to
+individual systems):
+</p><ol>
+<li>Forbid control characters (bytes 1-31) in filenames,
+including newline, escape, and tab.
+I know of no user or program that actually <i>requires</i> this capability.
+As far as I can tell,
+this capability exists only to make it hard to write correct software,
+to ease the job of attackers, and to create interoperability problems.
+Chuck it.
+</li><li>Forbid leading "-".  This way, you can always
+distinguish option flags from filenames, eliminating a host of
+stupid errors.
+Nobody in their right mind writes programs that <i>depend</i> on having
+dash-prefixed files on a Unix system.
+Even on Windows systems they're a bad idea, because many programs use "-"
+instead of "/" to identify options.
+</li><li>Require a valid UTF-8 encoding of filenames in the userspace API.
+This way, filenames can always be correctly displayed.
+Trying to use environment values like LC_ALL (or other LC_* values) or
+LANG is just a hack that often fails.
+This will take time, as people slowly transition and minor tool problems
+get fixed, but I believe that transition is already well underway.
+</li><li>Forbid "problematic" characters
+that get specially interpreted by shells; this also helps HTML/XML,
+since they are a subset.
+I'll grant that this is less important; with the steps above, a lot of
+programs and statements like "cat *" just work correctly.
+But funny characters cause troubles for command-line users, because they
+need to quote them when typing in commands.. and they often forget to do so.
+They can also be a cause for trouble when they're passed down to other
+programs, especially if they run "exec" and so on.
+A useful starting-point list is "<b>*?:[]"&lt;&gt;|(){}&amp;'!</b>"
+(this is Glindra's "safe" list with ampersand, single-quote, and bang added).
+This list is probably a little extreme, but let's try and see
+(I think colon is no big deal by itself on most Unix/Linux systems, but
+it does cause trouble with Windows and MacOS systems).
+Note that &lt; and &gt;, and &amp; are on the list; this eliminates many
+HTML/XML problems!
+As noted earlier,
+I'd need to go through a complete analysis of all characters for a final list;
+for security, you want to identify everything that is permissible, and
+disallow everything else, but its manifestation can be either way as long
+as you've considered all possible cases.
+But if this set can be determined locally, based on local requirements,
+there's less need to get complete agreement on a list.
+</li><li>Forbid leading/trailing space characters, and
+for adjacent spaces. They confuse users when they happen, with no utility.
+In particular, filenames that are <i>only</i> space characters are nothing
+but trouble (especially if a directory is full of them).
+</li><li>Forbid leading "~" (tilde) in filenames might be good, too, since shells
+specially interpret such names.
+</li></ol>
+<p>
+In particular, ensuring that filenames had
+no control characters, no leading dashes, and used UTF-8 encoding would
+make a lot of software development simpler.
+This is a long-term effort, but the journey of a thousand miles starts
+with the first step.
+
+</p><p>
+<!--
+If you're writing in (Bourne) shell, and you want your code to be
+truly portable across many shell implementations, take a peek at
+<a href="http://www.opengroup.org/onlinepubs/009695399/utilities/xcu_chap02.html">Open Group's Base Specifications for the shell</a>, along with the
+<a href="http://www.gnu.org/software/autoconf/manual/html_node/Portable-Shell.html#Portable-Shell">portable shell guidelines from the GNU autoconf
+documentation</a>.
+Lots of good information on stuff that works and stuff to avoid.
+You <i>can</i> simply write for the bash shell, but in that case,
+make sure the header clearly runs the bash shell - don't assume that
+/bin/sh is bash!
+Programming in the shell is generally easy; the big problem is that it's
+easy to write code that works unless its data (e.g., filenames) have
+spaces in them.  If a variable can include a space, you typically need
+to refer to it using <tt>"$variablename"</tt>, not just <tt>$variablename</tt>.
+<a href="http://www.davidpashley.com/articles/writing-robust-shell-scripts.html">Writing robust shell scripts</a> has some other suggestions, and
+<a href="http://wooledge.org:8000/BashPitfalls">Bash pitfalls</a> lists
+some common mistakes, and
+<a href="http://www.pixelbeat.org/programming/shell_script_mistakes.html">
+here's another list of common shell mistakes</a>.
+-->
+
+
+</p><p>
+</p><hr>
+<p>
+Feel free to see my home page at
+<a href="http://www.dwheeler.com/">http://www.dwheeler.com</a>.
+You may also want to look at my paper
+<a href="http://www.dwheeler.com/oss_fs_why.html">Why OSS/FS? Look at
+the Numbers!</a> and my book on
+<a href="http://www.dwheeler.com/secure-programs">how to develop
+secure programs</a>.
+
+</p><p>
+(C) Copyright 2009 David A. Wheeler.
+<!-- Clyde Roby reviewed this article on 2009-03-23 -->
+<!--
+Open Group Base Specifications Issue 7 is here:
+http://www.opengroup.org/onlinepubs/9699919799/toc.htm
+-->
+
+</p></body></html>

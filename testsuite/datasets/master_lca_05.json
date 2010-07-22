@@ -1,0 +1,80 @@
+/* Test the LCA code. */
+{
+	"commands" :
+	[
+		/* Create repository "r1". */
+
+		{	"cmd" : "create_new_repo",	"repo" : "r1",	"pathname" : "./repo"	},
+		{	"cmd" : "set_current_repo",	"repo" : "r1"	},
+
+		/* This test is concerned with computing the LCA on
+		** relatively simple 2-way branches and merges (and
+		** without criss-crosses.
+		**
+		** Make the following:
+		**
+		**                [NULL ROOT]
+		**                    |
+		**                    A
+		**                   / \.
+		**                  B   C
+		**                 /     \.
+		**                D       E
+		**               / \.    / \.
+		**              F   G   H   I
+		**             /     \ /     \.
+		**            J       K       L
+		**             \     / \     / \.
+		**              M   N   O   P   S
+		**               \ /     \ /
+		**                Q       R
+		**
+		**
+		**
+		**
+		*/
+
+		{	"cmd" : "initial_commit",	"name" : "A"	},
+		{	"cmd" : "commit",		"name" : "B",	"parent" : "A"	},
+		{	"cmd" : "commit",		"name" : "C",	"parent" : "A"	},
+		{	"cmd" : "commit",		"name" : "D",	"parent" : "B"	},
+		{	"cmd" : "commit",		"name" : "E",	"parent" : "C"	},
+		{	"cmd" : "commit",		"name" : "F",	"parent" : "D"	},
+		{	"cmd" : "commit",		"name" : "G",	"parent" : "D"	},
+		{	"cmd" : "commit",		"name" : "H",	"parent" : "E"	},
+		{	"cmd" : "commit",		"name" : "I",	"parent" : "E"	},
+		{	"cmd" : "commit",		"name" : "J",	"parent" : "F"	},
+		{	"cmd" : "merge2",		"name" : "K",	"parent" : "G",	"parent2" : "H"	},
+		{	"cmd" : "commit",		"name" : "L",	"parent" : "I"	},
+		{	"cmd" : "commit",		"name" : "M",	"parent" : "J"	},
+		{	"cmd" : "commit",		"name" : "N",	"parent" : "K"	},
+		{	"cmd" : "commit",		"name" : "O",	"parent" : "K"	},
+		{	"cmd" : "commit",		"name" : "P",	"parent" : "L"	},
+		{	"cmd" : "merge2",		"name" : "Q",	"parent" : "M",	"parent2" : "N" },
+		{	"cmd" : "merge2",		"name" : "R",	"parent" : "O",	"parent2" : "P" },
+		{	"cmd" : "commit",		"name" : "S",	"parent" : "L"	},
+
+		{	"cmd" : "compute_lca",		"leaves" : [ "B", "C" ],	"lca" : "A",	"lca_children" : [ "B", "C" ] },
+		{	"cmd" : "compute_lca",		"leaves" : [ "D", "E" ],	"lca" : "A",	"lca_children" : [ "D", "E" ] },
+		{	"cmd" : "compute_lca",		"leaves" : [ "J", "L" ],	"lca" : "A",	"lca_children" : [ "J", "L" ] },
+
+		{	"cmd" : "compute_lca",		"leaves" : [ "F", "G" ],	"lca" : "D",	"lca_children" : [ "F", "G" ] },
+
+		{	"cmd" : "compute_lca",		"leaves" : [ "J", "K" ],	"lca" : "D",	"lca_children" : [ "J", "K" ] },
+
+		/*
+		** LCA(Q,R) should give {K}.  The edges thru J and L should be discarded (see CLAIM in source).
+		*/
+		{	"cmd" : "compute_lca",		"leaves" : [ "Q", "R" ],	"lca" : "K",	"lca_children" : [ "Q", "R" ] },
+
+		/*
+		** LCA(Q,R,S) should give {E} with partials {K,L}.
+		*/
+		{	"cmd" : "compute_lca",		"leaves" : [ "Q", "R", "S" ],	"lca" : "E",	"lca_children" : [ "K", "L" ] },
+
+		/* Clean up our mess. */
+
+		{	"cmd" : "close_repo",		"repo" : "r1"	}
+	]
+}
+

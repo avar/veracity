@@ -1,0 +1,78 @@
+// JSON does not allow comments, but this file sort-of does.
+// Any line where the first two non-whitespace characters
+// are '//' will be discarded before it is passed to the
+// JSON parser.  Note that these are not end-of-line comments.
+// These are WHOLE LINE comments.
+
+{
+    "version" : 1,
+    "rectypes" :
+    {
+        "branch" :
+        {
+            "fields" : 
+            {
+                "csid" :
+                {
+                    "datatype" : "dagnode",
+                    "constraints" :
+                    {
+                        "required" : true,
+                        "dag" : "VERSION_CONTROL",
+
+                        "must_be_descendant" : true,
+                        // prev_version_of_this_record.csid must be an ancestor
+                        // of this csid.  for ALL previous versions (all direct parents)
+
+                        "violates_no_locks" : true
+                        // nothing in this changeset violates any current lock records
+                    }
+                },
+                "name" :
+                {
+                    "datatype" : "string",
+                    "constraints" :
+                    {
+                        "required" : true,
+                        "unique" : true,
+                        "maxlength" : 256
+                    }
+                }
+            }
+        },
+        "lock" :
+        {
+            "fields" : 
+            {
+                "userid" :
+                {
+                    "datatype" : "userid",
+                    "constraints" :
+                    {
+                        "required" : true
+                    }
+                },
+                "branch" :
+                {
+                    "datatype" : "string",
+                    "constraints" :
+                    {
+                        "required" : true
+                        // must be a branch name
+                    }
+                },
+                "object" :
+                {
+                    // this is a gid of a version control object
+                    "datatype" : "string",
+                    "constraints" :
+                    {
+                        "required" : true,
+                        "unique" : true
+                    }
+                }
+            }
+        }
+    }
+}
+

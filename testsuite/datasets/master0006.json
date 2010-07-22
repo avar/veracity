@@ -1,0 +1,59 @@
+/* A simple test. */
+{
+	"commands" :
+	[
+		/* Create 2 repositories: r1 and r1_dup. */
+
+		{	"cmd" : "create_new_repo",	"repo" : "r1",		"pathname" : "./repo"	},
+		{	"cmd" : "create_new_repo",	"repo" : "r1_dup",	"pathname" : "./repo"	},
+
+		/* Make an initial commit "i1" in "r1". */
+
+		{	"cmd" : "set_current_repo",	"repo" : "r1"	},
+		{	"cmd" : "initial_commit",	"name" : "i1"	},
+
+		/* Then make a linear series of commits from "i1":
+		**
+		** [null] <--- i1 <--- c2 <--- ... <--- c10
+		**
+		** Along the way assert that we only have one leaf.
+		*/
+
+		{	"cmd" : "commit_linear", 
+				"pattern" : "c%d",
+				"start" : 2,
+				"count" : 9,
+				"parent" : "i1"	},
+
+		{	"cmd" : "assert_leaves",	"leaves" : [ "c10" ]		},
+
+		/* Then make other linear series from "i1":
+		**
+		** [null] <--- i1 <--- c2 <--- ... <--- c10
+		**              |
+		**              + <--- d2 <--- ... <--- d10
+		**              |
+		**              + <--- e2 <--- ... <--- e10
+		*/
+
+		{	"cmd" : "commit_linear", 
+				"pattern" : "d%d",
+				"start" : 2,
+				"count" : 9,
+				"parent" : "i1"	},
+
+		{	"cmd" : "commit_linear", 
+				"pattern" : "e%d",
+				"start" : 2,
+				"count" : 9,
+				"parent" : "i1"	},
+
+		{	"cmd" : "assert_leaves",	"leaves" : [ "c10", "d10", "e10" ]	},
+
+		/* Clean up our mess. */
+
+		{	"cmd" : "close_repo",		"repo" : "r1"		},
+		{	"cmd" : "close_repo",		"repo" : "r1_dup"	}
+	]
+}
+

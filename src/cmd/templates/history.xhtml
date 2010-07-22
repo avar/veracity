@@ -1,0 +1,29 @@
+{{{<header.xhtml}}}
+	<script src='/static/gethistory.js'></script>
+	
+	<h2>history
+
+	&nbsp;<a id="toggle_filter" href="#"><img id="imgtoggle" class="headerimg" src="/static/css/images/opengreen.png"/></a></h2>
+	<div id="filter">
+	<form id="historyfilter">
+	<table id="tablefilter">
+	<tr>
+		<td>user:<select id="user"></select></td>
+		<td>stamp:<input id="stamp" width="50"></input></td>	
+		<td>from:<input type="text" id="datefrom"></input></td>
+		<td>to:<input type="text" id="dateto"></input></td>
+		<td><span id="buttonFilter" class="button" onclick="javascript:filterHistory();" >show</span></td>
+		<td><span id="buttonClear" class="button" onclick="javascript:clearFilter();">clear</span></td>
+	</tr>
+	</table>
+	</form>
+	</div>
+	
+	<table id="tablehistory" class="datatable" cellspacing="0" cellpadding="0">
+		<th></th><th>revision</th><th>comment</th><th></th><th>date</th><th>author</th>
+	
+	</table>
+	
+	<div id="tbl_footer" class="tablefooter">&nbsp;<a id="more" href="#">more</a></div>
+	
+{{{<footer.xhtml}}}

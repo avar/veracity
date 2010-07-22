@@ -1,0 +1,15 @@
+{
+	"comment" : "A main test script that does what...",
+	"commands" :
+	[
+		{	"cmd" : "create_new_repo",	"repo" : "r1",	"pathname" : "./repo"	},
+		{	"cmd" : "initial_commit",	"name" : "c1"	},
+		{	"cmd" : "commit",			"name" : "c2",	"parent" : "c1"	},
+		{	"cmd" : "commit",			"name" : "c3",	"parent" : "c2"	},
+		{	"cmd" : "commit",			"name" : "c4",	"parent" : "c3"	},
+		{	"cmd" : "commit",			"name" : "c5",	"parent" : "c4"	},
+		{   "cmd" : "assert_leaves",	"leaves" : [ "c5" ]		},
+		{	"cmd" : "close_repo" }
+	]
+}
+

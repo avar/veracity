@@ -1,0 +1,60 @@
+/* Test the LCA code. */
+{
+	"commands" :
+	[
+		/* Create repository "r1". */
+
+		{	"cmd" : "create_new_repo",	"repo" : "r1",	"pathname" : "./repo"	},
+		{	"cmd" : "set_current_repo",	"repo" : "r1"	},
+
+		/* This test is concerned with computing the LCA on
+		** relatively simple 2-way branches and merges (and
+		** without criss-crosses.
+		**
+		** This version has multiple initial checkins so that we
+		** have a disconnected dag.
+		**
+		** Make the following:
+		**
+		**                     [NULL ROOT]
+		**                     /        \.
+		**                    A          A0
+		**                   / \.       /  \.
+		**                  B   C     B0    C0
+		**                 /     \   /       \.
+		**                X        Y          Z
+		**
+		**
+		*/
+
+		{	"cmd" : "initial_commit",	"name" : "A"	},
+		{	"cmd" : "commit",		"name" : "B",	"parent" : "A"	},
+		{	"cmd" : "commit",		"name" : "C",	"parent" : "A"	},
+
+		{	"cmd" : "initial_commit",	"name" : "A0"	},
+		{	"cmd" : "commit",		"name" : "B0",	"parent" : "A0"	},
+		{	"cmd" : "commit",		"name" : "C0",	"parent" : "A0"	},
+
+		{	"cmd" : "commit",		"name" : "X",	"parent" : "B"	},
+		{	"cmd" : "merge2",		"name" : "Y",	"parent" : "C",	"parent2" : "B0"	},
+		{	"cmd" : "commit",		"name" : "Z",	"parent" : "C0"	},
+
+		{	"cmd" : "compute_lca",		"leaves" : [ "X", "Y" ],	"lca" : "A",	"lca_children" : [ "X", "Y" ] },
+		{	"cmd" : "compute_lca",		"leaves" : [ "Y", "Z" ],	"lca" : "A0",	"lca_children" : [ "Y", "Z" ] },
+
+		/*
+		** cross the streams...
+		*/
+
+		{	"cmd" : "compute_lca",		"leaves" : [ "X", "Y", "Z" ],
+			      				"lca" : "*root*",	"lca_children" : [ "A", "A0" ],
+							"spca" : { "A"  : [ "X", "Y" ],
+							       	   "A0" : [ "Y", "Z" ] } },
+
+
+		/* Clean up our mess. */
+
+		{	"cmd" : "close_repo",		"repo" : "r1"	}
+	]
+}
+

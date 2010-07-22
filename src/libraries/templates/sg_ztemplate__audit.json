@@ -1,0 +1,38 @@
+{
+    "version" : 1,
+    "rectypes" :
+    {
+        "item" :
+        {
+            "no_recid" : true,
+            "fields" : 
+            {
+                "csid" :
+                {
+                    "datatype" : "string",
+                    "constraints" :
+                    {
+                        "required" : true
+                    }
+                },
+                "who" :
+                {
+                    "datatype" : "userid",
+                    "constraints" :
+                    {
+                        "required" : true
+                    }
+                },
+                "when" :
+                {
+                    "datatype" : "datetime",
+                    "constraints" :
+                    {
+                        "required" : true
+                    }
+                }
+            }
+        }
+    }
+}
+

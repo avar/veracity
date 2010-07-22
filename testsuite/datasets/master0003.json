@@ -1,0 +1,55 @@
+{
+	"comment" : "A main test script that does what...",
+	"commands" :
+	[
+		{	"cmd" : "create_new_repo",	"repo" : "r1",	"pathname" : "./repo"		},
+		{	"cmd" : "clone_repo",		"repo" : "r1",	"repodest" : "r1_dup"	},
+
+		{	"cmd" : "set_current_repo",	"repo" : "r1"	},
+		{	"cmd" : "initial_commit",	"name" : "c1"	},
+		{	"cmd" : "commit",			"name" : "c2",	"parent" : "c1"	},
+		{	"cmd" : "commit",			"name" : "c3",	"parent" : "c2"	},
+		{	"cmd" : "commit",			"name" : "c4",	"parent" : "c3"	},
+		{	"cmd" : "commit",			"name" : "c5",	"parent" : "c4"	},
+		{	"cmd" : "assert_leaves",	"leaves" : [ "c5" ]		},
+		{	"cmd" : "commit",			"name" : "c6",	"parent" : "c5"	},
+
+		{	"cmd" : "push_dagfrag",	
+				"repo" : "r1",
+				"repodest" : "r1_dup",
+				"leaves" : [ "c6" ],
+				"generations" : 1,
+				"expect_fail_disconnected" : [ "c5" ]
+			},
+
+		{	"cmd" : "push_dagfrag",	
+				"repo" : "r1",
+				"repodest" : "r1_dup",
+				"leaves" : [ "c6" ],
+				"generations" : 2,
+				"expect_fail_disconnected" : [ "c4" ]
+			},
+
+		{	"cmd" : "push_dagfrag",	
+				"repo" : "r1",
+				"repodest" : "r1_dup",
+				"leaves" : [ "c6" ],
+				"generations" : 5,
+				"expect_fail_disconnected" : [ "c1" ]
+			},
+
+		{	"cmd" : "push_dagfrag",	
+				"repo" : "r1",
+				"repodest" : "r1_dup",
+				"leaves" : [ "c6" ],
+				"generations" : 0
+			},
+
+		{	"cmd" : "assert_leaves",	"repo" : "r1",	"leaves" : [ "c6" ]		},
+		{	"cmd" : "assert_leaves",	"repo" : "r1_dup",	"leaves" : [ "c6" ]		},
+
+		{	"cmd" : "close_repo",		"repo" : "r1"		},
+		{	"cmd" : "close_repo",		"repo" : "r1_dup"	}
+	]
+}
+

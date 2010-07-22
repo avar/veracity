@@ -1,0 +1,214 @@
+# Building SourceGear Veracity under Windows
+
+## Introduction
+
+Assumed - you are running Windows Vista or Windows 7, have Visual Studio 2008 or
+2010 (or the equivalent SDK and NMake) installed, and are comfortable at a 
+`bash` prompt.  Don't worry, cygwin is only necessary to build Veracity's 
+third party libraries, and some cygwin utilities are used in our test suite.  
+Once you're building Sprawl in Visual Studio, you no longer need to use 
+a cygwin bash prompt.
+
+In this document, we'll be saying '`~`' when we might otherwise
+say `c:\cygwin\home\someguy`. It's the Bash home directory, either way - 
+but one's far easier to type.
+
+## Getting/Unpacking the Source
+
+Retrieve the latest Veracity tarball from [sourcegear](http://www.sourcegear.com/veracity/downloads.html)
+
+Unpack it under the directory of your choice - for brevity, we'll pretend you 
+unpacked it under `~/v`, and so your source tree begins at `~/v/veracity`
+
+## Prerequisites
+
+Things to install:
+* CMake
+* cygin
+
+Archives to download, but not install:
+* sqlite
+* zlib
+* libcurl
+* ICU
+* SpiderMonkey
+
+Then, you'll build our dependencies, and put them in c:\sgneeds
+
+Finally, you'll be able to build sprawl.
+
+### Install CMake
+
+Grab [cmake 2.8.2](http://www.cmake.org/files/v2.8/cmake-2.8.2-win32-x86.exe) from
+[cmake.org](http://www.cmake.org).  
+
+Install CMake, making sure to add cmake to the PATH variable when prompted.
+
+### Install Cygwin
+
+Visit [cygwin.com](http://cygwin.com/), grab and run the setup utility
+from there.  In addition to the stock Cygwin tools, you'll also need:
+
+* unzip (under Archive)
+* zip (under Archive)
+* diffutils (under Utils)
+* patchutils (under Utils)
+* curl (under Net)
+
+IMPORTANT! Make sure that your system path is correct.  At a cygwin 
+prompt, you should be able to run this command:
+
+which nmake
+
+with no errors.
+
+You'll need this in your path.  If you're using 2008, the directory in 
+Program Files is named with 9.0, if you're using 2010, the directory is 
+named with 10.0.  Edit your environment variables via the Computer / 
+Properties dialog.  You'll also want to put cygwin's bin directory in 
+your path:
+
+    c:\Program Files (x86)\Microsoft Visual Studio 9.0\VC\bin;C:\cygwin\bin
+
+### Download sqlite archive
+
+We depend on [sqlite](http://www.sqlite.org).  
+
+Run these commands to get it:
+
+cd ~/v/veracity/thirdparty/archives
+/bin/curl -O http://www.sqlite.org/sqlite-amalgamation-3_6_23_1.zip 
+
+If the version number has changed, you'll need to update MY_SQLITE_VERSION in
+`thirdparty/build_win32.sh`
+
+### zlib
+
+We depend on [zlib](http://www.zlib.net).  
+
+Run these commands to get it:
+
+cd ~/v/veracity/thirdparty/archives
+/bin/curl -O http://zlib.net/zlib-1.2.5.tar.gz
+
+If the version number has changed, you'll need to update MY_ZLIB_VERSION in
+`thirdparty/build_win32.sh`
+
+### libcurl
+
+We depend on [curl](http://curl.haxx.se).  
+
+Run these commands to get it:
+
+cd ~/v/veracity/thirdparty/archives
+/bin/curl -O http://curl.haxx.se/download/curl-7.21.0.tar.gz
+
+If the version number has changed, you'll need to update MY_LIBCURL_VERSION in
+`thirdparty/build_win32.sh`
+
+### ICU - Internal Components for Unicode
+
+We depend on [ICU](http://site.icu-project.org/download).  
+
+Run these commands to get it:
+
+cd ~/v/veracity/thirdparty/archives
+/bin/curl -O http://download.icu-project.org/files/icu4c/4.4.1/icu4c-4_4_1-src.tgz
+
+If the version number has changed, you'll need to update MY_ICU_VERSION in
+`thirdparty/build_win32.sh`.  ALSO:  The icu dll names include both major and 
+minor version numbers, which will also need to be changed. 
+
+### SpiderMonkey
+
+We depend on the [SpiderMonkey Javascript Engine](https://developer.mozilla.org/en/spidermonkey).  
+
+Run these commands to get it:
+
+cd ~/v/veracity/thirdparty/archives
+/bin/curl -O http://ftp.mozilla.org/pub/mozilla.org/js/js-1.8.0-rc1.tar.gz
+
+If the version number has changed, you'll need to update the tarball name in
+`thirdparty/build_win32.sh`
+
+## Building sgneeds
+
+From the `~/v/veracity/thirdparty` directory:
+
+    ./build_win32.sh
+    
+## Installing sgneeds
+
+The `build_win32.sh` script creates an `sgneeds_xxx.zip` file, where "xxx" is
+based on the current date and time.  You'll need to extract this to your
+root directory.
+
+Sorry about that, we'll clean that up soon.
+
+Anyway.
+
+Assuming you're looking at `~/v/veracity/thirdparty/sgneeds_2010_07_01_123.zip`,
+you'll want to run:
+
+    # cygwin bash-speak for C:\
+    cd /cygdrive/c
+    unzip ~/v/veracity/thirdparty/sgneeds_2010_07_01_123.zip
+    
+which will create the `c:\sgneeds` folder.
+    
+You'll want this in your path.  Edit your environment variables via
+the Computer / Properties menu, or via a batch file, to add:
+
+    set PATH=%PATH%;c:\sgneeds\bin
+    set LIB=%LIB%;c:\sgneeds\lib
+
+Open a new command prompt to ensure these variables are in effect.
+
+## Creating the Build Directory
+
+`cmake` will handle the creation of Makefiles, etc. You just need to give it a
+place to work.
+
+For example, let's create a neighbor of our source directory.
+
+mkdir ~/v/debug
+cd ~/v/debug
+
+Now run cmake:
+
+    cmake -G "Visual Studio 9 2008" ../veracity
+    
+to create a Visual Studio 2008 solution, or:
+
+    cmake -G "Visual Studio 10" ../veracity
+
+to create a Visual Studio 2010 solution, or:
+
+    cmake -G "NMake Makefiles" ../veracity
+    
+to create NMake makefiles and use the SDK compiler.
+    
+You now have a build tree, replete with Makefiles or Project files.  
+
+For Visual Studio users, simply open the ~/v/debug/sprawl.sln and build.
+
+Having done that, running `ctest` from the `~/v/debug` directory will run
+a batch of unit tests.
+
+For NMake users,
+
+    cd ~/v/debug
+    nmake
+    ctest
+    
+All tests should pass, with any exceptions noted on our
+[known issues](http://www.sourcegear.com/veracity/help/known_issues.html) page.
+
+To make your life easier at this point, you'll want to add the following to
+your path:
+
+    ~/v/debug/src/cmd/Debug
+    ~/v/debug/src/script/Debug
+    
+the homes of `vv` (the Veracity command-line app) and `vscript` (the scripting
+engine), respectively.  For NMake users, remove the Debug from the above directories.

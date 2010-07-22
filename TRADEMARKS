@@ -1,0 +1,59 @@
+
+The core Veracity software is licensed under the Apache License,
+Version 2.0, but this license explicitly (in section 6) does not
+give you permission to use our trademarks.
+
+"SourceGear" and "Veracity" are trademarks of SourceGear, LLC.
+Except as indicated here, you may not use these marks, or any
+other terms or symbols which are confusingly similar, without
+written permission from SourceGear.
+
+1.  If you are redistributing unmodified files distributed by
+SourceGear, and you are doing so in compliance with the relevant
+copyright license, then you may use our marks to identify
+those files.  For example, under the terms of the Apache License
+version 2.0 you may redistribute the Veracity source code,
+and if you are distributing it just as you received it from
+us, without changes, you may call it Veracity.
+
+2.  You may use our marks when you are writing or speaking
+about the Veracity software.  For example, if you are writing
+a book or an article, you need not ask our permission to refer to
+our software by its name.  This applies whether your opinions
+of Veracity are positive or negative.  We request that you clearly
+identify that "SourceGear" and "Veracity" are trademarks of 
+SourceGear, LLC wherever you normally acknowledge important trademarks
+in your work.
+
+3.  For any other situation, except for cases of "nominative fair use",
+you need written permission from SourceGear to use our marks (or other
+terms or symbols which are confusingly similar).  Examples include:
+
+  using some or all of the Veracity source code in another kind
+  of product
+
+  incorporating some or all of the Veracity source code into
+  another version control or ALM system
+
+  derivative works
+
+  a fork of the project
+
+  on merchandise
+
+  in domain names
+
+  any situation where there is likelihood of confusion about whether
+  SourceGear is involved with or is endorsing your efforts
+
+4.  Nothing here shall be interpreted to allow any third party to claim any
+association with SourceGear or to imply any approval or support by SourceGear
+for any third party products or services.
+
+Portions of this document came from the Apache trademark policy, which
+is itself Copyright 2010 The Apache Software Foundation and Licensed under
+the Apache License, Version 2.0, and is available at:
+
+    http://www.apache.org/foundation/marks/
+
+

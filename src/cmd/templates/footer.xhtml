@@ -1,0 +1,77 @@
+<!-- footer -->
+
+</div>
+
+<script type="text/javascript" src="/static/js/jquery-ui-1.8.custom.min.js"></script>
+<script type="text/javascript" src="/static/json2.js"></script>
+<script type="text/javascript" src="/static/user.js"></script>
+<script type="text/javascript" src="/static/activity.js"></script>
+
+<script type="text/javascript">
+  var startRepo = "{{{WFREPO}}}";
+  var sgUserName = "{{{USERNAME}}}";
+  var sgUserEmail = "{{{EMAIL}}}";
+  var sgShowActivity = "true";
+
+  if (!! _savedUser())
+      sgUserName = _savedUser();
+      
+  if (!! _showActivity())
+      sgShowActivity = _showActivity();
+      
+</script>
+<style type="text/css">@import "/static/jquery.svg.css";</style> 
+<script type="text/javascript" src="/static/jquery.svg.js"></script>
+<script type="text/javascript" src="/static/jquery.svganim.js"></script>
+<script type="text/javascript" src="/static/jquery.flot.js"></script>
+
+<script type="text/javascript">
+  if (!! window.sgKickoff)
+  {
+    $(document).ready(sgKickoff);
+    
+    var button = $('span.button')
+    button.hover(
+			            function() {			                
+			                $(this).addClass("button_hover");			              
+			            },
+                        function() {
+
+			                $(this).removeClass("button_hover");
+                        });
+                        
+    $("#topmenu li.menudropdown").mouseenter(function(){
+		 $(this).find("ul.submenu").slideDown('fast').show()
+			.mouseleave(function(){$(this).parent().find("ul.submenu").slideUp('fast'); });
+		 
+		 $(this).mouseleave(function(){$(this).parent().find("ul.submenu").slideUp('fast'); });
+        		
+    });
+    
+   $("#imgmenudropdown").toggle(
+		function() {
+			$(this).parent().find("ul.submenu").slideDown('fast').show();
+		}, 
+		function(){
+			$(this).parent().find("ul.submenu").slideDown('fast').hide();
+		}
+   );
+ 
+    $.each($("#topmenu li"), function(i, v) {
+        if (window.location.href.indexOf(v.id) >= 0) {          
+                        
+            if ( $(this).attr("class") == "submenuli")
+            {
+				$('#workingdir').addClass("selected");
+				$(this).addClass("off");
+            } 
+             
+			$(this).addClass("selected");    
+        } 
+    });
+      
+  }
+  
+</script>
+</body></html>
+

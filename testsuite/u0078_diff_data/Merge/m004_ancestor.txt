@@ -1,0 +1,23 @@
+all three the same 1
+mod, orig, lat
+all three the same 2
+mod, orig, lat
+all three the same 3
+mod, orig, lat
+all three the same 4
+mod, _orig_, lat
+all three the same 5
+orig, lat
+all three the same 6
+mod, orig
+all three the same 7
+all three the same 8
+only orig
+all three the same 9
+all three the same 10
+all three the same 11
+_orig_
+all three the same 12
+_orig_
+all three the same 13
+all three the same 14

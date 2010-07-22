@@ -1,0 +1,92 @@
+/* Test the LCA code. */
+{
+	"commands" :
+	[
+		/* Create repository "r1". */
+
+		{	"cmd" : "create_new_repo",	"repo" : "r1",	"pathname" : "./repo"	},
+		{	"cmd" : "set_current_repo",	"repo" : "r1"	},
+
+		/* This test is concerned with computing the LCA on
+		** relatively simple 2-way branches and merges (and
+		** without criss-crosses.
+		**
+		** Make the following:
+		**
+		**                [NULL ROOT]
+		**                    |
+		**                    A
+		**                   / \.
+		**                  B   C
+		**                 /     \.
+		**                D       E
+		**               / \.    / \.
+		**              F   G   H   I
+		**              |   |   |   |
+		**              J   K   L   M
+		**             / \
+		**            N   O
+		**            |   |
+		**            P   Q
+		**             \ /
+		**              R
+		**              |
+		**              S
+		**             / \.
+		**            T   U
+		**
+		*/
+
+		{	"cmd" : "initial_commit",	"name" : "A"	},
+		{	"cmd" : "commit",		"name" : "B",	"parent" : "A"	},
+		{	"cmd" : "commit",		"name" : "C",	"parent" : "A"	},
+		{	"cmd" : "commit",		"name" : "D",	"parent" : "B"	},
+		{	"cmd" : "commit",		"name" : "E",	"parent" : "C"	},
+		{	"cmd" : "commit",		"name" : "F",	"parent" : "D"	},
+		{	"cmd" : "commit",		"name" : "G",	"parent" : "D"	},
+		{	"cmd" : "commit",		"name" : "H",	"parent" : "E"	},
+		{	"cmd" : "commit",		"name" : "I",	"parent" : "E"	},
+		{	"cmd" : "commit",		"name" : "J",	"parent" : "F"	},
+		{	"cmd" : "commit",		"name" : "K",	"parent" : "G"	},
+		{	"cmd" : "commit",		"name" : "L",	"parent" : "H"	},
+		{	"cmd" : "commit",		"name" : "M",	"parent" : "I"	},
+
+		{	"cmd" : "commit",		"name" : "N",	"parent" : "J"	},
+		{	"cmd" : "commit",		"name" : "O",	"parent" : "J"	},
+		{	"cmd" : "commit",		"name" : "P",	"parent" : "N"	},
+		{	"cmd" : "commit",		"name" : "Q",	"parent" : "O"	},
+		{	"cmd" : "merge2",		"name" : "R",	"parent" : "P",	"parent2" : "Q" },
+		{	"cmd" : "commit",		"name" : "S",	"parent" : "R"	},
+		{	"cmd" : "commit",		"name" : "T",	"parent" : "S"	},
+		{	"cmd" : "commit",		"name" : "U",	"parent" : "S"	},
+
+		{	"cmd" : "compute_lca",		"leaves" : [ "B", "C" ],	"lca" : "A",	"lca_children" : [ "B", "C" ] },
+		{	"cmd" : "compute_lca",		"leaves" : [ "D", "C" ],	"lca" : "A" },
+		{	"cmd" : "compute_lca",		"leaves" : [ "B", "E" ],	"lca" : "A" },
+		{	"cmd" : "compute_lca",		"leaves" : [ "D", "E" ],	"lca" : "A" },
+
+		{	"cmd" : "compute_lca",		"leaves" : [ "F", "G" ],	"lca" : "D" },
+		{	"cmd" : "compute_lca",		"leaves" : [ "F", "E" ],	"lca" : "A" },
+		{	"cmd" : "compute_lca",		"leaves" : [ "G", "E" ],	"lca" : "A" },
+
+		{	"cmd" : "compute_lca",		"leaves" : [ "F", "G", "E" ],	"lca" : "A",	"lca_children" : [ "D", "E" ] },
+
+		{	"cmd" : "compute_lca",		"leaves" : [ "F", "G", "H" ],	"lca" : "A",	"lca_children" : [ "D", "H" ] },
+		{	"cmd" : "compute_lca",		"leaves" : [ "F", "H", "I" ],	"lca" : "A",	"lca_children" : [ "F", "E" ] },
+
+		{	"cmd" : "compute_lca",		"leaves" : [ "F", "G", "H", "I" ],	"lca" : "A",	"lca_children" : [ "D", "E" ] },
+		{	"cmd" : "compute_lca",		"leaves" : [ "J", "K", "L", "M" ],	"lca" : "A",	"lca_children" : [ "D", "E" ] },
+
+		{	"cmd" : "compute_lca",		"leaves" : [ "J", "G", "H", "I" ],	"lca" : "A",	"lca_children" : [ "D", "E" ] },
+		{	"cmd" : "compute_lca",		"leaves" : [ "N", "G", "H", "I" ],	"lca" : "A",	"lca_children" : [ "D", "E" ] },
+		{	"cmd" : "compute_lca",		"leaves" : [ "P", "G", "H", "I" ],	"lca" : "A",	"lca_children" : [ "D", "E" ] },
+		{	"cmd" : "compute_lca",		"leaves" : [ "R", "G", "H", "I" ],	"lca" : "A",	"lca_children" : [ "D", "E" ] },
+		{	"cmd" : "compute_lca",		"leaves" : [ "S", "G", "H", "I" ],	"lca" : "A",	"lca_children" : [ "D", "E" ] },
+		{	"cmd" : "compute_lca",		"leaves" : [ "T", "G", "H", "I" ],	"lca" : "A",	"lca_children" : [ "D", "E" ] },
+
+		/* Clean up our mess. */
+
+		{	"cmd" : "close_repo",		"repo" : "r1"	}
+	]
+}
+

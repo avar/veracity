@@ -1,0 +1,7 @@
+all three the same 1
+mod, ORIG, lat
+all three the same 2
+mod, orig, lat
+all three the same 3
+mod, orig, lat
+all three the same 3

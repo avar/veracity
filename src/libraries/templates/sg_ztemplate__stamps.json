@@ -1,0 +1,31 @@
+{
+    "version" : 1,
+    "rectypes" :
+    {
+        "item" :
+        {
+            "fields" : 
+            {
+                "csid" :
+                {
+                    "datatype" : "dagnode",
+                    "constraints" :
+                    {
+                        "required" : true,
+                        "dag" : "VERSION_CONTROL"
+                    }
+                },
+                "stamp" :
+                {
+                    "datatype" : "string",
+                    "constraints" :
+                    {
+                        "required" : true,
+                        "maxlength" : 256
+                    }
+                }
+            }
+        }
+    }
+}
+

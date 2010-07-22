@@ -1,0 +1,33 @@
+{{{<header.xhtml}}}
+
+	<h2><a id='backtolist' style='display: none' title='back to the work item list' href='/repos/{{{WFREPO}}}/wit/records'><img src="/static/greenbackbtn.png" alt="back to the work item list" /></a>  
+	<span id='wititle'>work items</span>  
+	<form id='wisearch'><div class="searchbox"><label for="wisearchtext">search:</label><input type="search" id="wisearchtext" name="searchtext" value="" placeholder="search phrase" /></div></form>
+	<a id='newwi' href='#'>new work item</a></h2>
+        
+
+<div id="zingselection">
+  <table id="zingtable" class="datatable">
+    <thead>
+      <tr>
+        <th>Summary</th>
+        <th >Status: <select id="filter_status"><option value=''>(all)</option></select></th>
+        <th >Assignee: <select id="filter_assignee"><option value=''>(any)</option></select></th>
+        <th >Reporter: <select id="filter_reporter"><option value=''>(any)</option></select></th>
+        <th >Verifier: <select id="filter_verifier"><option value=''>(any)</option></select></th>
+        <th >Sprint: <select id="filter_sprint"><option value=''>(all)</option></select></th>
+      </tr>
+    </thead>
+    <tbody id="zinglist">
+    </tbody>
+  </table>
+</div>
+<div id="zingform"></div>
+		
+		<script type="text/javascript">
+			var sgZfAction = "list";
+var sgZfBaseUrl = '/repos/{{{WFREPO}}}/wit/';
+</script>
+<script src='/static/zingform.js'></script>
+
+{{{<footer.xhtml}}}

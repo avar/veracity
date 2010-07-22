@@ -1,0 +1,41 @@
+{
+    "version" : 1,
+    "rectypes" :
+    {
+        "item" :
+        {
+            "merge_type" : "field",
+            "fields" : 
+            {
+                "csid" :
+                {
+                    "datatype" : "dagnode",
+                    "constraints" :
+                    {
+                        "required" : true,
+                        "dag" : "VERSION_CONTROL"
+                    }
+                },
+                "tag" :
+                {
+                    "datatype" : "string",
+                    "constraints" :
+                    {
+                        "required" : true,
+                        "unique" : true,
+                        "maxlength" : 256
+                    },
+                    "merge" :
+                    {
+                        "uniqify" : 
+                        {
+                            "op" : "inc_digits_end",
+                            "which" : "least_impact"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+

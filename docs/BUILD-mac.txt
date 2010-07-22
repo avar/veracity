@@ -1,0 +1,126 @@
+# Building SourceGear Veracity under Mac OS
+
+## Introduction
+
+Assumed - you are running Mac OS Snow Leopard (10.6), have `sudo`/admin access
+on your Mac, and are comfortable at a `terminal` prompt. The first two are
+mandatory; the last is kinda important.
+
+## Getting/Unpacking the Source
+
+Retrieve the latest Veracity tarball from [sourcegear](http://www.sourcegear.com/veracity/)
+
+Unpack it under the directory of your choice - for brevity, we'll pretend you 
+unpacked it under `~/v`, and so your source tree begins at `~/v/veracity`
+
+## Prerequisites
+
+### XCode Toolkit
+
+If you don't already have XCode 3.2 (or higher) installed, you can find it on 
+your Snow Leopard install DVD.
+
+If you don't have a Snow Leopard install DVD, you can download Xcode from the
+Apple Developer web site.
+
+If you decide to download Xcode, you'll need to register as an Apple Developer.
+It's free. It's quick. 
+
+Having done that, visit the 
+[Download Xcode](http://developer.apple.com/technologies/xcode.html) page,
+then click "Mac Dev Center" and retrieve the latest Xcode and iPhone SDK --
+currently Xcode 3.2.3 and iPhone SDK 4.  That's the version used in the 
+preparation of this document.
+
+Install as instructed.
+
+### ICU - Internal Components for Unicode
+
+Visit the [ICU Download Page](http://site.icu-project.org/download),
+and reteive the latest ICU4C tarball -- currently
+[v4.4.1](http://download.icu-project.org/files/icu4c/4.4.1/icu4c-4_4_1-src.tgz).
+
+If the version number has changed, you'll need to update the tarball name in
+`thirdparty/build_mac.sh`
+
+Copy (don't extract) this tarball to `~/v/veracity/thirdparty/archives`
+
+### CMake
+
+Install [CMake](http://www.cmake.org/cmake/resources/software.html)
+
+Download the [Darwin installer](http://cmake.org/files/v2.8/cmake-2.8.2-Darwin-universal.dmg), and install as instructed.
+
+### SpiderMonkey
+
+You'll also need to get the SpiderMonkey JavaScript engine.
+
+To do so, visit [mozilla.org](https://developer.mozilla.org/en/spidermonkey)
+and grab the latest SpiderMonkey source - currently
+[v1.8 RC 1](http://ftp.mozilla.org/pub/mozilla.org/js/js-1.8.0-rc1.tar.gz)
+
+If the version number has changed, you'll need to update the tarball name in
+`thirdparty/build_mac.sh`
+
+Copy (don't extract) this archive to `~/v/veracity/thirdparty/archives`, then 
+`cd ~/v/veracity/thirdparty` and run:
+
+    sudo ./build_mac.sh
+    
+## Installing sgneeds
+
+The `build_mac.sh` script created an `sgneeds_xxx.zip` file, where "xxx" is
+based on the current date and time.  You'll need to extract this to your
+root directory.
+
+Sorry about that, we'll clean that up soon.
+
+Anyway.
+
+Assuming you're looking at `~/v/veracity/thirdparty/sgneeds_2010_07_01_123.zip`,
+you'll want to:
+
+    cd /
+    sudo unzip ~/v/veracity/thirdparty/sgneeds_2010_07_01_123.zip
+    
+which will create the `/sgneeds` folder.
+    
+You'll want this in your library path, so edit `~/.profile` and add:
+
+    export DYLD_LIBRARY_PATH=/sgneeds/lib:$DYLD_LIBRARY_PATH
+    
+You should open a new terminal window to ensure this is in effect before
+building/running Veracity.
+
+## Creating the Build Directory
+
+`cmake` will handle the creation of Makefiles, etc. You just need to give it a
+place to work.
+
+For example, let's create a `~/v/debug`, a neighbor of our source directory.
+
+cd to this folder, then run:
+
+    cmake -G "Unix Makefiles" ../veracity
+    
+You now have a build tree, replete with Makefiles.  You'll only need to run the
+top-level one. So:
+
+    cd ~/v/debug
+    make
+    
+upon successful completion, you should run:
+
+    make test
+    
+All tests should pass, with any exceptions noted on our
+[known issues](http://www.sourcegear.com/veracity/help/known_issues.html) page.
+
+To make your life easier at this point, you'll want to add the following to
+your path:
+
+    ~/v/debug/src/cmd
+    ~/v/debug/src/script
+    
+the homes of `vv` (the Veracity command-line app) and `vscript` (the scripting
+engine), respectively.

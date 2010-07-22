@@ -1,0 +1,20 @@
+all three the same 1
+mod, orig, lat
+mod, orig, _lat_
+all three the same 2
+all three the same 2
+mod, orig, lat
+mod, orig, _lat_
+mod, orig, lat
+all three the same 3
+all three the same 3
+_mod_, orig, _lat_
+all three the same 4
+all three the same 4
+mod, orig, lat
+mod, orig, _lat_
+mod, orig, lat
+mod, orig, _lat_
+mod, orig, lat
+all three the same 5
+all three the same 5

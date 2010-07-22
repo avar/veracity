@@ -1,0 +1,6 @@
+		XMLPtr_c dummy;
+
+		if (!SearchChildBoolean(handle, Value, GroupString,KeyString,dummy.Int) && !SuppressXMLErrors) {
+			PrintGroupStringError(GroupString,KeyString);
+			LogErrorAndQuit();
+		}

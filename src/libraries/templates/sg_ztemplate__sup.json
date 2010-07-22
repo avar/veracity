@@ -1,0 +1,40 @@
+{
+    "version" : 1,
+    "rectypes" :
+    {
+        "item" :
+        {
+            "fields" : 
+            {
+                "what" :
+                {
+                    "datatype" : "string",
+                    "constraints" :
+                    {
+                        "required" : true,
+                        "maxlength" : 140
+                    }
+                },
+                "who" :
+                {
+                    "datatype" : "userid",
+                    "constraints" :
+                    {
+                        "required" : true,
+                        "defaultvalue" : "whoami"
+                    }
+                },
+                "when" :
+                {
+                    "datatype" : "datetime",
+                    "constraints" :
+                    {
+                        "required" : true,
+                        "defaultvalue" : "now"
+                    }
+                }
+            }
+        }
+    }
+}
+

@@ -1,0 +1,85 @@
+/* A simple test. */
+{
+	"commands" :
+	[
+		/* Create 2 repositories: r1 and r1_dup. */
+
+		{	"cmd" : "create_new_repo",	"repo" : "r1",	"pathname" : "./repo"	},
+		{	"cmd" : "clone_repo",		"repo" : "r1",	"repodest" : "r1_dup"	},
+
+		/* Make an initial commit "c1" in "r1".
+		** Then make a linear series of commits from "c1":
+		**
+		** [null] <--- c1 <--- c2 <--- ... <--- c10
+		**
+		** Along the way assert that we only have one leaf.
+		*/
+
+		{	"cmd" : "set_current_repo",	"repo" : "r1"	},
+		{	"cmd" : "initial_commit",	"name" : "c1"	},
+		{	"cmd" : "commit",			"name" : "c2",	"parent" : "c1"	},
+		{	"cmd" : "commit",			"name" : "c3",	"parent" : "c2"	},
+		{	"cmd" : "commit",			"name" : "c4",	"parent" : "c3"	},
+		{	"cmd" : "commit",			"name" : "c5",	"parent" : "c4"	},
+		{	"cmd" : "assert_leaves",	"leaves" : [ "c5" ]		},
+		{	"cmd" : "commit",			"name" : "c6"	},
+		{	"cmd" : "commit",			"name" : "c7"	},
+		{	"cmd" : "commit",			"name" : "c8"	},
+		{	"cmd" : "commit",			"name" : "c9"	},
+		{	"cmd" : "commit",			"name" : "c10"	},
+		{	"cmd" : "assert_leaves",	"leaves" : [ "c10" ]		},
+
+		/* Try to push a fragment of the graph from "r1" to "r1_dup".
+		**
+		** These should fail because the fragment is limited such that the
+		** destination repo doesn't know about some of the ancestors.
+		*/
+
+		{	"cmd" : "push_dagfrag",	
+				"repo" : "r1",
+				"repodest" : "r1_dup",
+				"leaves" : [ "c6" ],
+				"generations" : 1,
+				"expect_fail_disconnected" : [ "c5" ]
+			},
+
+		{	"cmd" : "push_dagfrag",	
+				"repo" : "r1",
+				"repodest" : "r1_dup",
+				"leaves" : [ "c6" ],
+				"generations" : 2,
+				"expect_fail_disconnected" : [ "c4" ]
+			},
+
+		{	"cmd" : "push_dagfrag",	
+				"repo" : "r1",
+				"repodest" : "r1_dup",
+				"leaves" : [ "c6" ],
+				"generations" : 5,
+				"expect_fail_disconnected" : [ "c1" ]
+			},
+
+		/* This push should succeed because we include everything back to 
+		** the root/null of the dag.
+		**
+		** Assert that we know what the leaves in both repos are.  they should
+		** be different because we didn't send the complete dag.
+		*/
+
+		{	"cmd" : "push_dagfrag",	
+				"repo" : "r1",
+				"repodest" : "r1_dup",
+				"leaves" : [ "c6" ],
+				"generations" : 0
+			},
+
+		{	"cmd" : "assert_leaves",	"repo" : "r1",		"leaves" : [ "c10" ]		},
+		{	"cmd" : "assert_leaves",	"repo" : "r1_dup",	"leaves" : [ "c6" ]		},
+
+		/* Clean up our mess. */
+
+		{	"cmd" : "close_repo",		"repo" : "r1"		},
+		{	"cmd" : "close_repo",		"repo" : "r1_dup"	}
+	]
+}
+

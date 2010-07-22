@@ -2191,7 +2191,7 @@ static void sg_zing__check_field__string(
         )
 {
     // check minlength
-    if (pzfa->v._string.has_minlength && (strlen(psz_val) < pzfa->v._string.val_minlength))
+    if (pzfa->v._string.has_minlength && ((SG_int64)strlen(psz_val) < pzfa->v._string.val_minlength))
     {
         SG_ERR_CHECK(  sg_zing__add_error_object(pCtx, pva_violations,
                     SG_ZING_CONSTRAINT_VIOLATION__TYPE, "minlength",
@@ -2202,7 +2202,7 @@ static void sg_zing__check_field__string(
     }
 
     // check maxlength
-    if (pzfa->v._string.has_maxlength && (strlen(psz_val) > pzfa->v._string.val_maxlength))
+    if (pzfa->v._string.has_maxlength && ((SG_int64)strlen(psz_val) > pzfa->v._string.val_maxlength))
     {
         SG_ERR_CHECK(  sg_zing__add_error_object(pCtx, pva_violations,
                     SG_ZING_CONSTRAINT_VIOLATION__TYPE, "maxlength",

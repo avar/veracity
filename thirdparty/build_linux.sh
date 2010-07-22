@@ -53,8 +53,7 @@ cd "${MY_JS_ROOT}"/src
 make BUILD_OPT=1 -f Makefile.ref
 cd "${MY_JS_ROOT}"/src
 cp "${MY_JS_ROOT}"/src/Linux_All_OPT.OBJ/libjs.a ${DEST}/lib/libsgbrings_js.a
-mkdir ${DEST}/include/sgbrings
-mkdir ${DEST}/include/sgbrings/js
+mkdir -p ${DEST}/include/sgbrings/js
 cp "${MY_JS_ROOT}"/src/Linux_All_OPT.OBJ/*.h ${DEST}/include/sgbrings/js
 cp "${MY_JS_ROOT}"/src/*.h ${DEST}/include/sgbrings/js
 cp "${MY_JS_ROOT}"/src/*.msg ${DEST}/include/sgbrings/js

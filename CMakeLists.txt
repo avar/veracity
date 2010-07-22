@@ -45,7 +45,7 @@ if(CMAKE_COMPILER_IS_GNUCC)
 # TODO but gcc on the Mac is at version 4.0 and this
 # TODO option was added in some later version.
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Wdeclaration-after-statement -Werror -Wstrict-prototypes")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Wdeclaration-after-statement -Wstrict-prototypes")
 
 # the apple_unicode code violates the strict-aliasing rules
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-strict-aliasing")

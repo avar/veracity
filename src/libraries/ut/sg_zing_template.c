@@ -1007,14 +1007,14 @@ static void SG_zingtemplate__validate__constraints__string(
                 );
     }
 
-    if (b_has_maxlength && psz_defaultvalue && (strlen(psz_defaultvalue) > i_maxlength))
+    if (b_has_maxlength && psz_defaultvalue && ((SG_int64)strlen(psz_defaultvalue) > i_maxlength))
     {
         SG_ERR_THROW2(  SG_ERR_ZING_INVALID_TEMPLATE,
                 (pCtx, "%s.%s:  defaultvalue longer than maxlength", psz_where, psz_cur)
                 );
     }
 
-    if (b_has_minlength && psz_defaultvalue && (strlen(psz_defaultvalue) < i_minlength))
+    if (b_has_minlength && psz_defaultvalue && ((SG_int64)strlen(psz_defaultvalue) < i_minlength))
     {
         SG_ERR_THROW2(  SG_ERR_ZING_INVALID_TEMPLATE,
                 (pCtx, "%s.%s:  defaultvalue shorter than minlength", psz_where, psz_cur)
@@ -1064,7 +1064,7 @@ static void SG_zingtemplate__validate__constraints__string(
             SG_ERR_CHECK(  SG_varray__get__sz(pCtx, pva_allowed, i, &psz_va)  );
             if (b_has_minlength)
             {
-                if (strlen(psz_va) < i_minlength)
+                if ((SG_int64)strlen(psz_va) < i_minlength)
                 {
                     SG_ERR_THROW2(  SG_ERR_ZING_INVALID_TEMPLATE,
                             (pCtx, "%s.%s: allowed value is shorter than minlength", psz_where, psz_cur)
@@ -1073,7 +1073,7 @@ static void SG_zingtemplate__validate__constraints__string(
             }
             if (b_has_maxlength)
             {
-                if (strlen(psz_va) > i_maxlength)
+                if ((SG_int64)strlen(psz_va) > i_maxlength)
                 {
                     SG_ERR_THROW2(  SG_ERR_ZING_INVALID_TEMPLATE,
                             (pCtx, "%s.%s:  allowed value is longer than maxlength", psz_where, psz_cur)
